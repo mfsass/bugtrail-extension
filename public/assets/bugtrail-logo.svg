@@ -1,0 +1,50 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">BugTrail logo</title>
+  <desc id="desc">A bug character walking along a digital trail.</desc>
+  <defs>
+    <linearGradient id="teal" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1b6d76" />
+      <stop offset="100%" stop-color="#2ea4ad" />
+    </linearGradient>
+    <linearGradient id="ink" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#16334e" />
+      <stop offset="100%" stop-color="#20566b" />
+    </linearGradient>
+  </defs>
+
+  <rect x="120" y="110" width="784" height="784" rx="120" fill="none" stroke="url(#teal)" stroke-width="24" />
+
+  <path d="M232 754 C338 666, 530 630, 770 607 C702 548, 620 520, 526 515 C615 490, 715 472, 812 446"
+        fill="none" stroke="url(#ink)" stroke-width="38" stroke-linecap="round" />
+
+  <g transform="translate(325 300)">
+    <ellipse cx="170" cy="165" rx="132" ry="146" fill="url(#teal)" />
+    <circle cx="128" cy="148" r="13" fill="#16334e" />
+    <circle cx="212" cy="148" r="13" fill="#16334e" />
+    <path d="M136 203 Q170 230 204 203" fill="none" stroke="#16334e" stroke-width="10" stroke-linecap="round" />
+    <path d="M122 70 Q105 34 76 22" fill="none" stroke="#16334e" stroke-width="10" stroke-linecap="round" />
+    <path d="M214 70 Q231 34 260 22" fill="none" stroke="#16334e" stroke-width="10" stroke-linecap="round" />
+    <circle cx="72" cy="20" r="10" fill="#16334e" />
+    <circle cx="264" cy="20" r="10" fill="#16334e" />
+    <rect x="6" y="112" width="92" height="165" rx="30" fill="#225b77" />
+    <rect x="25" y="138" width="50" height="72" rx="12" fill="#16334e" />
+    <path d="M46 170 h22 v22 h-22 z" fill="#f6b63b" />
+    <path d="M78 232 Q118 202 132 244" fill="none" stroke="#16334e" stroke-width="14" stroke-linecap="round" />
+    <path d="M206 260 Q286 244 313 214" fill="none" stroke="#16334e" stroke-width="14" stroke-linecap="round" />
+    <path d="M307 206 L287 350" fill="none" stroke="#16334e" stroke-width="12" stroke-linecap="round" />
+  </g>
+
+  <g stroke="url(#teal)" stroke-width="12" fill="none" stroke-linecap="round">
+    <path d="M732 264 V354" />
+    <path d="M690 287 V344" />
+    <path d="M774 317 V368" />
+    <path d="M690 287 C662 287 655 250 677 244" />
+    <path d="M732 264 C699 264 698 226 724 218" />
+    <path d="M774 317 C815 317 814 280 788 272" />
+  </g>
+  <circle cx="677" cy="244" r="12" fill="url(#teal)" />
+  <circle cx="724" cy="218" r="12" fill="url(#teal)" />
+  <circle cx="788" cy="272" r="12" fill="url(#teal)" />
+
+  <path d="M791 142 L807 176 L841 192 L807 208 L791 242 L775 208 L741 192 L775 176 Z" fill="#f4b13b" />
+</svg>
