@@ -428,9 +428,31 @@ function App() {
           </div>
         </div>
         <div className="topbar-right">
-          <span className={isRecording ? "status recording" : "status"}>
+          <span
+            className={isRecording ? "status recording" : "status"}
+            aria-label={
+              isRecording
+                ? "Recording in progress"
+                : session?.endedAt
+                  ? "Recording complete"
+                  : "Recording idle"
+            }
+            title={
+              isRecording
+                ? "Recording in progress"
+                : session?.endedAt
+                  ? "Recording complete"
+                  : "Recording idle"
+            }
+          >
             {isRecording && <span className="live-dot" aria-hidden="true" />}
-            {isRecording ? "Recording" : session?.endedAt ? "Complete" : "Idle"}
+            <span className="status-label">
+              {isRecording
+                ? "Recording"
+                : session?.endedAt
+                  ? "Complete"
+                  : "Idle"}
+            </span>
           </span>
           <label className="theme-select">
             <span className="theme-select-label">Theme</span>

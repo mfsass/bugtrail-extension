@@ -48,8 +48,7 @@ textarea {
   align-items: center;
   border-bottom: 1px solid var(--border);
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px 10px;
+  gap: 8px;
   justify-content: space-between;
   margin-bottom: 12px;
   padding-bottom: 10px;
@@ -58,8 +57,8 @@ textarea {
 .brand-block {
   align-items: center;
   display: flex;
-  flex: 0 1 auto;
-  gap: 10px;
+  flex: 0 0 auto;
+  gap: 8px;
 }
 
 .brand-copy {
@@ -76,9 +75,9 @@ textarea {
 
 h1 {
   color: var(--text);
-  font-size: 22px;
+  font-size: 21px;
   font-weight: 720;
-  letter-spacing: 0.01em;
+  letter-spacing: 0;
   line-height: 1;
   margin: 0;
 }
@@ -99,9 +98,17 @@ h1 {
 }
 
 .status.recording {
-  background: var(--amber-soft);
-  border-color: #e0a638;
-  color: #7d4a00;
+  background: #fff1f2;
+  border-color: #efadb5;
+  color: #ab2635;
+  height: 32px;
+  justify-content: center;
+  padding: 0;
+  width: 32px;
+}
+
+.status.recording .status-label {
+  display: none;
 }
 
 .notice,
@@ -552,8 +559,7 @@ button:focus-visible {
   align-items: center;
   display: flex;
   flex: 0 0 auto;
-  flex-wrap: wrap;
-  gap: 8px;
+  gap: 7px;
   justify-content: flex-end;
   margin-left: auto;
 }
@@ -565,26 +571,23 @@ button:focus-visible {
   flex: 0 0 auto;
   font-size: 11px;
   font-weight: 700;
-  gap: 8px;
+  gap: 6px;
   line-height: 1;
   white-space: nowrap;
 }
 
 .theme-select-label {
-  color: inherit;
-  flex: 0 0 auto;
-  font-size: 10px;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
+  display: none;
 }
 
 .theme-select-field {
   align-items: center;
+  background: var(--surface);
   border: 1px solid var(--border-strong);
   border-radius: 6px;
   display: inline-flex;
   min-height: 32px;
-  min-width: 132px;
+  min-width: 108px;
   overflow: hidden;
   padding-right: 2px;
   position: relative;
@@ -603,7 +606,7 @@ button:focus-visible {
   min-height: 32px;
   min-width: 0;
   outline: none;
-  padding: 0 34px 0 10px;
+  padding: 0 28px 0 10px;
   width: 100%;
 }
 
@@ -635,13 +638,14 @@ button:focus-visible {
   box-shadow: 0 0 0 3px rgba(20, 114, 125, 0.16);
 }
 
-@media (max-width: 380px) {
+@media (min-width: 440px) {
   .theme-select-label {
-    display: none;
-  }
-
-  .theme-select-field {
-    min-width: 0;
+    display: inline;
+    color: inherit;
+    flex: 0 0 auto;
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
   }
 }
 
@@ -652,12 +656,13 @@ button:focus-visible {
 }
 
 .live-dot {
-  animation: pulse 1s ease-in-out infinite;
-  background: #d57b00;
+  animation: record-pulse 1.5s ease-out infinite;
+  background: #df3b4a;
   border-radius: 50%;
   display: inline-block;
-  height: 8px;
-  width: 8px;
+  box-shadow: 0 0 0 0 rgba(223, 59, 74, 0.45);
+  height: 10px;
+  width: 10px;
 }
 
 .mini-note {
@@ -747,18 +752,13 @@ button:focus-visible {
   width: 1px;
 }
 
-@keyframes pulse {
-  0% {
-    opacity: 0.45;
-    transform: scale(0.9);
+@keyframes record-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(223, 59, 74, 0.45);
   }
   50% {
-    opacity: 1;
-    transform: scale(1.15);
-  }
-  100% {
-    opacity: 0.45;
-    transform: scale(0.9);
+    box-shadow: 0 0 0 5px rgba(223, 59, 74, 0);
   }
 }
 
@@ -811,9 +811,9 @@ button:focus-visible {
 }
 
 :root[data-theme="dark"] .status.recording {
-  background: #31280f;
-  border-color: #8f6b1f;
-  color: #ffd68a;
+  background: #351b20;
+  border-color: #87404a;
+  color: #ffb8c0;
 }
 
 :root[data-theme="dark"] .notice {
@@ -926,7 +926,7 @@ button:focus-visible {
 }
 
 :root[data-theme="dark"] .theme-select-field {
-  background: transparent;
+  background: #172328;
 }
 
 :root[data-theme="dark"] .theme-select-caret {
@@ -940,4 +940,30 @@ button:focus-visible {
 :root[data-theme="dark"] .theme-select-field:focus-within {
   border-color: #45b7c0;
   box-shadow: 0 0 0 3px rgba(69, 183, 192, 0.25);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .theme-select-field {
+    background: #172328;
+    border-color: #2f464f;
+  }
+
+  :root:not([data-theme="light"]) .theme-select select {
+    color: #dce8ec;
+  }
+
+  :root:not([data-theme="light"]) .theme-select-caret {
+    color: #95b0b8;
+  }
+
+  :root:not([data-theme="light"]) .status.recording {
+    background: #351b20;
+    border-color: #87404a;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-dot {
+    animation: none;
+  }
 }
