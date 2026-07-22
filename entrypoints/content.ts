@@ -17,9 +17,22 @@ export default defineContentScript({
     const lastCommittedInputValue = new WeakMap<HTMLElement, string>();
     let lastClickSignature = "";
     let lastClickAt = 0;
+    let inspectNextElement = false;
     const send = (message: CapturedStepMessage | CapturedConsoleMessage | CapturedNetworkMessage) => {
       chrome.runtime.sendMessage(message).catch(() => undefined);
     };
+
+    const setInspectMode = (enabled: boolean) => {
+      inspectNextElement = enabled;
+      toggleInspectionStyle(enabled);
+    };
+
+    chrome.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) => {
+      if (!isInspectModeMessage(message)) return undefined;
+      setInspectMode(message.enabled);
+      sendResponse({ ok: true });
+      return false;
+    });
 
     const captureRoute = () => {
       if (location.href === lastUrl) return;
@@ -43,6 +56,26 @@ export default defineContentScript({
     document.addEventListener(
       "click",
       (event) => {
+        if (inspectNextElement) {
+          const inspectedTarget = inspectableElement(event.target);
+          if (!inspectedTarget) return;
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          setInspectMode(false);
+          send({
+            kind: "bugtrail:step",
+            step: {
+              type: "bug-marker",
+              timestamp: new Date().toISOString(),
+              url: location.href,
+              route: location.pathname + location.search + location.hash,
+              label: `Front-end issue: ${labelFor(inspectedTarget)}`,
+              element: elementInfo(inspectedTarget),
+            },
+          });
+          return;
+        }
+
         const target = closestElement(event.target);
         if (!target) return;
         if (isNoiseInputClick(target)) return;
@@ -62,6 +95,14 @@ export default defineContentScript({
             element: elementInfo(target),
           },
         });
+      },
+      true,
+    );
+
+    document.addEventListener(
+      "keydown",
+      (event) => {
+        if (event.key === "Escape" && inspectNextElement) setInspectMode(false);
       },
       true,
     );
@@ -145,6 +186,11 @@ export default defineContentScript({
 
 type BridgeDetail = BridgeConsoleDetail | BridgeNetworkDetail;
 
+type InspectModeMessage = {
+  kind: "bugtrail:set-inspect-mode";
+  enabled: boolean;
+};
+
 type BridgeConsoleDetail = {
   kind: "console";
   level?: unknown;
@@ -171,6 +217,12 @@ type BridgeNetworkDetail = {
 function isBridgeDetail(detail: unknown): detail is BridgeDetail {
   if (!detail || typeof detail !== "object" || !("kind" in detail)) return false;
   return (detail as { kind?: unknown }).kind === "console" || (detail as { kind?: unknown }).kind === "network";
+}
+
+function isInspectModeMessage(message: unknown): message is InspectModeMessage {
+  if (!message || typeof message !== "object") return false;
+  const candidate = message as { kind?: unknown; enabled?: unknown };
+  return candidate.kind === "bugtrail:set-inspect-mode" && typeof candidate.enabled === "boolean";
 }
 
 function stringValue(value: unknown, fallback = ""): string {
@@ -241,6 +293,15 @@ function closestElement(target: EventTarget | null): HTMLElement | undefined {
   return target instanceof HTMLElement
     ? target.closest<HTMLElement>("button,a,input,textarea,select,[role='button'],[data-bugtrail-action],[onclick]") || undefined
     : undefined;
+}
+
+function inspectableElement(target: EventTarget | null): HTMLElement | undefined {
+  if (target instanceof HTMLElement && target !== document.body && target !== document.documentElement) return target;
+  if (!(target instanceof Element)) return undefined;
+  let current: Element | null = target.parentElement;
+  while (current && !(current instanceof HTMLElement)) current = current.parentElement;
+  if (!(current instanceof HTMLElement) || current === document.body || current === document.documentElement) return undefined;
+  return current;
 }
 
 function isInputLike(element: HTMLElement): boolean {
@@ -321,4 +382,25 @@ function pathFromUrl(url: string): string {
   } catch {
     return url;
   }
+}
+
+function toggleInspectionStyle(enabled: boolean): void {
+  const styleId = "bugtrail-inspection-style";
+  let style = document.getElementById(styleId);
+  if (enabled && !style) {
+    style = document.createElement("style");
+    style.id = styleId;
+    style.textContent = `
+      html.bugtrail-inspecting, html.bugtrail-inspecting * {
+        cursor: crosshair !important;
+      }
+
+      html.bugtrail-inspecting *:hover {
+        outline: 2px solid #1f6f7a !important;
+        outline-offset: 2px !important;
+      }
+    `;
+    document.documentElement.append(style);
+  }
+  document.documentElement.classList.toggle("bugtrail-inspecting", enabled);
 }

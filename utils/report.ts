@@ -50,8 +50,12 @@ function appendStep(lines: string[], step: BugTrailStep, session: BugTrailSessio
   lines.push(`${step.index}. ${stepSentence(step)}`);
 
   if (step.element?.tag) lines.push(`   - Element: \`${redactString(step.element.tag)}\``);
+  if (step.element?.selector) lines.push(`   - Selector: \`${redactString(step.element.selector)}\``);
   if (step.element?.component) lines.push(`   - Component: \`${redactString(step.element.component)}\``);
   if (step.element?.testId) lines.push(`   - Test ID: \`${redactString(step.element.testId)}\``);
+  if (step.element?.ariaLabel) lines.push(`   - Accessible label: \`${redactString(step.element.ariaLabel)}\``);
+  if (step.element?.name) lines.push(`   - Name: \`${redactString(step.element.name)}\``);
+  if (step.element?.text) lines.push(`   - Text: \`${redactString(step.element.text)}\``);
   if (step.element?.action) lines.push(`   - Action: \`${redactString(step.element.action)}\``);
   if (step.element?.field) lines.push(`   - Field: \`${redactString(step.element.field)}\``);
   if (step.element?.value) lines.push(`   - Value: \`${redactString(step.element.value)}\``);
@@ -159,10 +163,15 @@ function stepSentence(step: BugTrailStep): string {
     case "submit":
       return `Submitted **${label}**.`;
     case "bug-marker":
+      if (step.element) return `Marked front-end issue on **${frontEndIssueLabel(label)}**.`;
       return "Marked bug here.";
     case "note":
       return `${label}.`;
   }
+}
+
+function frontEndIssueLabel(label: string): string {
+  return label.replace(/^Front-end issue:\s*/i, "") || label;
 }
 
 function prioritizeNetwork(events: NetworkEvent[]): NetworkEvent[] {

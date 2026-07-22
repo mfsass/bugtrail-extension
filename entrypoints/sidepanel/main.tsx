@@ -40,6 +40,10 @@ function App() {
   const [statusMessage, setStatusMessage] = useState("");
   const [themeMode, setThemeMode] = useState<ThemeMode>("system");
   const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">("light");
+  const [isInspectingElement, setIsInspectingElement] = useState(false);
+  const [inspectionStartStepCount, setInspectionStartStepCount] = useState<
+    number | undefined
+  >();
 
   const session = state.session;
   const isRecording = Boolean(session && !session.endedAt);
@@ -113,6 +117,27 @@ function App() {
   useEffect(() => {
     void loadThemePreference();
   }, []);
+
+  useEffect(() => {
+    if (!isRecording) {
+      setIsInspectingElement(false);
+      setInspectionStartStepCount(undefined);
+    }
+  }, [isRecording]);
+
+  useEffect(() => {
+    if (!isInspectingElement || inspectionStartStepCount == null || !session)
+      return;
+    const latestStep = session.steps.at(-1);
+    if (
+      session.steps.length > inspectionStartStepCount &&
+      latestStep?.type === "bug-marker" &&
+      latestStep.element
+    ) {
+      setIsInspectingElement(false);
+      setInspectionStartStepCount(undefined);
+    }
+  }, [inspectionStartStepCount, isInspectingElement, session]);
 
   useEffect(() => {
     applyTheme(themeMode);
@@ -273,6 +298,21 @@ function App() {
     });
   }
 
+  async function setElementInspection(enabled: boolean) {
+    await runAction(enabled ? "inspect-on" : "inspect-off", async () => {
+      const response = await send({
+        kind: "bugtrail:set-inspect-mode",
+        enabled,
+      });
+      if (!response.ok)
+        throw new Error(
+          response.error || "BugTrail could not update element inspection.",
+        );
+      setIsInspectingElement(enabled);
+      setInspectionStartStepCount(enabled ? session?.steps.length || 0 : undefined);
+    });
+  }
+
   async function copyScreenshot() {
     await runAction("screenshot", async () => {
       const screenshot = (async () => {
@@ -383,9 +423,8 @@ function App() {
             alt=""
             aria-hidden="true"
           />
-          <div>
-            <p className="eyebrow">BugTrail</p>
-            <h1>QA handoff trail</h1>
+          <div className="brand-copy">
+            <h1>BugTrail</h1>
           </div>
         </div>
         <div className="topbar-right">
@@ -395,17 +434,24 @@ function App() {
           </span>
           <label className="theme-select">
             <span className="theme-select-label">Theme</span>
-            <select
-              value={themeMode}
-              onChange={(event) =>
-                void updateTheme(event.target.value as ThemeMode)
-              }
-              aria-label="Theme preference"
-            >
-              <option value="system">System ({resolvedTheme})</option>
-              <option value="light">Light</option>
-              <option value="dark">Dark</option>
-            </select>
+            <span className="theme-select-field">
+              <select
+                value={themeMode}
+                onChange={(event) =>
+                  void updateTheme(event.target.value as ThemeMode)
+                }
+                aria-label="Theme preference"
+              >
+                <option value="system">System ({resolvedTheme})</option>
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+              </select>
+              <span className="theme-select-caret" aria-hidden="true">
+                <svg viewBox="0 0 12 12" focusable="false">
+                  <path d="M3 4.5 6 7.5l3-3" />
+                </svg>
+              </span>
+            </span>
           </label>
         </div>
       </header>
@@ -551,7 +597,16 @@ function App() {
               </p>
             ) : (
               session.steps.slice(-8).map((step) => (
-                <article className="step" key={step.id}>
+                <article
+                  className={
+                    step.type === "bug-marker" && step.element
+                      ? "step inspected-step"
+                      : step.type === "bug-marker"
+                        ? "step bug-step"
+                        : "step"
+                  }
+                  key={step.id}
+                >
                   <span>{step.index}</span>
                   <div>
                     <strong>{redactString(step.label || step.type)}</strong>
@@ -566,32 +621,37 @@ function App() {
                         {step.relatedConsoleEventIds.length} console event(s)
                       </small>
                     )}
+                    {step.type === "bug-marker" && step.element?.selector && (
+                      <small>
+                        Element: {redactString(step.element.selector)}
+                      </small>
+                    )}
                   </div>
                 </article>
               ))
             )}
           </section>
 
-          <section className="panel">
-            <label>
+          <section className="panel detail-panel">
+            <label className="detail-field">
               Actual result
               <textarea
                 value={actualResult}
                 onChange={(event) => setActualResult(event.target.value)}
-                rows={3}
+                rows={2}
                 placeholder="Describe what actually happened..."
               />
             </label>
-            <label>
+            <label className="detail-field">
               Expected result
               <textarea
                 value={expectedResult}
                 onChange={(event) => setExpectedResult(event.target.value)}
-                rows={3}
+                rows={2}
                 placeholder="Describe what should have happened..."
               />
             </label>
-            <label>
+            <label className="detail-field notes-field">
               Notes
               <textarea
                 value={notes}
@@ -602,9 +662,35 @@ function App() {
             </label>
           </section>
 
-          <footer className="actions">
+          <footer
+            className={isRecording ? "actions recording-actions" : "actions"}
+          >
             {isRecording ? (
               <>
+                <label className="inspection-toggle">
+                  <span>
+                    <strong>
+                      {isInspectingElement
+                        ? "Choose the problem element"
+                        : "Inspect front-end issue"}
+                    </strong>
+                    <small>
+                      {isInspectingElement
+                        ? "Next page click adds the exact element to the trail"
+                        : "Arm one click for selector, label, and text"}
+                    </small>
+                  </span>
+                  <input
+                    type="checkbox"
+                    checked={isInspectingElement}
+                    onChange={(event) =>
+                      void setElementInspection(event.target.checked)
+                    }
+                    disabled={Boolean(busyAction)}
+                    aria-label="Inspect next front-end element"
+                  />
+                  <span className="switch-track" aria-hidden="true" />
+                </label>
                 <button
                   type="button"
                   className="secondary"
@@ -778,7 +864,15 @@ function actionLabel(action: string, stage: "progress" | "done"): string {
     },
     screenshot: {
       progress: "Capturing screen...",
-      done: "Screenshot copied — paste it alongside your report.",
+      done: "Screenshot copied - paste it alongside your report.",
+    },
+    "inspect-on": {
+      progress: "Turning on element inspection...",
+      done: "Element inspection is ready.",
+    },
+    "inspect-off": {
+      progress: "Turning off element inspection...",
+      done: "Element inspection is off.",
     },
   };
   return (

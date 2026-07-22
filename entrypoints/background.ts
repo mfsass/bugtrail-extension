@@ -135,6 +135,19 @@ async function handleMessage(message: BackgroundMessage, sender: chrome.runtime.
     return { ok: true, state: nextState };
   }
 
+  if (message.kind === "bugtrail:set-inspect-mode") {
+    if (state.session.endedAt || state.activeTabId == null) {
+      return { ok: false, state, error: "Start a trail before inspecting an element." };
+    }
+    await injectContentScript(state.activeTabId);
+    try {
+      await chrome.tabs.sendMessage(state.activeTabId, message);
+      return { ok: true, state };
+    } catch {
+      return { ok: false, state, error: "BugTrail could not activate element inspection on this tab." };
+    }
+  }
+
   if (sender.tab?.id !== state.activeTabId) return { ok: true, state };
 
   if (message.kind === "bugtrail:step") {

@@ -119,6 +119,7 @@ export type BackgroundMessage =
   | { kind: "bugtrail:register-site"; origin: string }
   | { kind: "bugtrail:unregister-site"; origin: string }
   | { kind: "bugtrail:mark-bug" }
+  | { kind: "bugtrail:set-inspect-mode"; enabled: boolean }
   | { kind: "bugtrail:capture-screenshot" }
   | CapturedStepMessage
   | CapturedConsoleMessage

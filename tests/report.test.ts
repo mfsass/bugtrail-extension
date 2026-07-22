@@ -277,6 +277,47 @@ describe("buildBugTrailReport", () => {
     expect(report).not.toContain("hunter2");
   });
 
+  it("includes inspected front-end element references for bug markers", () => {
+    const report = buildBugTrailReport({
+      id: "session-front-end-marker",
+      startedAt: "2026-06-01T08:32:00.000Z",
+      app: "Rewards Admin",
+      environment: "Stage",
+      startUrl: "https://rewards-admin-stage.spurcorpgifting.com/customers",
+      browser: "Chrome",
+      viewport: "1440x900",
+      steps: [
+        {
+          id: "step-1",
+          index: 1,
+          timestamp: "2026-06-01T08:32:00.000Z",
+          type: "bug-marker",
+          url: "https://rewards-admin-stage.spurcorpgifting.com/customers",
+          route: "/customers",
+          label: "Front-end issue: Save customer",
+          element: {
+            tag: "button",
+            text: "Save customer",
+            ariaLabel: "Save customer",
+            name: "save",
+            selector: "#save-button",
+          },
+          relatedNetworkEventIds: [],
+          relatedConsoleEventIds: [],
+        },
+      ],
+      networkEvents: [],
+      consoleEvents: [],
+    });
+
+    expect(report).toContain("1. Marked front-end issue on **Save customer**.");
+    expect(report).toContain("- Element: `button`");
+    expect(report).toContain("- Selector: `#save-button`");
+    expect(report).toContain("- Accessible label: `Save customer`");
+    expect(report).toContain("- Name: `save`");
+    expect(report).toContain("- Text: `Save customer`");
+  });
+
   it("keeps failed API steps visible when low-value steps exceed the primary step limit", () => {
     const steps: BugTrailStep[] = Array.from({ length: 22 }, (_, offset) => ({
       id: `step-${offset + 1}`,
