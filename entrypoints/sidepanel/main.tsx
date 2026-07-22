@@ -429,27 +429,33 @@ function App() {
         </div>
         <div className="topbar-right">
           <span
-            className={`rec-beacon ${
-              isRecording ? "recording" : session?.endedAt ? "complete" : "idle"
-            }`}
-            role="status"
+            className={
+              isRecording
+                ? "status is-recording"
+                : session?.endedAt
+                  ? "status is-complete"
+                  : "status is-idle"
+            }
             title={
               isRecording
-                ? "Recording in progress"
+                ? "Recording trail"
                 : session?.endedAt
                   ? "Trail complete"
                   : "Idle"
             }
             aria-label={
               isRecording
-                ? "Recording in progress"
+                ? "Recording"
                 : session?.endedAt
-                  ? "Trail complete"
+                  ? "Complete"
                   : "Idle"
             }
           >
-            <span className="rec-beacon-dot" aria-hidden="true" />
-            {isRecording && <span className="rec-beacon-ring" aria-hidden="true" />}
+            {isRecording ? (
+              <span className="beacon" aria-hidden="true" />
+            ) : (
+              <span className="status-dot" aria-hidden="true" />
+            )}
           </span>
           <label className="theme-select">
             <span className="theme-select-label">Theme</span>

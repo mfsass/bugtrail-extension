@@ -48,17 +48,16 @@ textarea {
   align-items: center;
   border-bottom: 1px solid var(--border);
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px 12px;
+  gap: 12px;
   justify-content: space-between;
   margin-bottom: 12px;
-  padding-bottom: 10px;
+  padding-bottom: 12px;
 }
 
 .brand-block {
   align-items: center;
   display: flex;
-  flex: 0 1 auto;
+  flex: 0 0 auto;
   gap: 10px;
   min-width: 0;
 }
@@ -70,86 +69,89 @@ textarea {
 .brand-mark {
   border-radius: 8px;
   flex: 0 0 auto;
-  height: 30px;
+  height: 32px;
   object-fit: cover;
-  width: 30px;
+  width: 32px;
 }
 
 h1 {
   color: var(--text);
-  font-size: 19px;
+  font-size: 20px;
   font-weight: 720;
-  letter-spacing: -0.01em;
+  letter-spacing: 0.01em;
   line-height: 1;
   margin: 0;
 }
 
-.rec-beacon {
+.status {
   align-items: center;
+  border-radius: 999px;
   display: inline-flex;
   flex: 0 0 auto;
-  height: 30px;
+  height: 32px;
   justify-content: center;
-  position: relative;
-  width: 30px;
+  transition: background 0.2s ease, border-color 0.2s ease;
+  width: 32px;
 }
 
-.rec-beacon-dot {
-  border-radius: 50%;
-  display: block;
-  height: 9px;
-  position: relative;
-  transition: background 0.2s ease;
-  width: 9px;
-  z-index: 1;
+.status.is-idle {
+  background: rgba(93, 112, 119, 0.1);
+  border: 1px solid var(--border);
 }
 
-.rec-beacon-ring {
-  animation: beacon-ring 1.8s ease-out infinite;
-  border-radius: 50%;
-  height: 9px;
-  position: absolute;
-  width: 9px;
+.status.is-complete {
+  background: rgba(24, 115, 76, 0.12);
+  border: 1px solid rgba(24, 115, 76, 0.3);
 }
 
-.rec-beacon.idle .rec-beacon-dot {
+.status.is-recording {
+  background: rgba(226, 59, 46, 0.12);
+  border: 1px solid rgba(226, 59, 46, 0.32);
+}
+
+.status-dot {
   background: var(--muted);
-  opacity: 0.45;
+  border-radius: 50%;
+  display: inline-block;
+  height: 8px;
+  width: 8px;
 }
 
-.rec-beacon.complete .rec-beacon-dot {
+.status.is-complete .status-dot {
   background: var(--green);
 }
 
-.rec-beacon.recording .rec-beacon-dot {
-  background: #e23b3b;
+.beacon {
+  background: #e23b2e;
+  border-radius: 50%;
+  display: inline-block;
+  height: 10px;
+  position: relative;
+  width: 10px;
 }
 
-@keyframes beacon-ring {
+.beacon::before {
+  animation: beacon-pulse 1.6s ease-out infinite;
+  background: #e23b2e;
+  border-radius: 50%;
+  content: "";
+  inset: 0;
+  position: absolute;
+}
+
+@keyframes beacon-pulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(226, 59, 59, 0.5);
+    opacity: 0.65;
+    transform: scale(1);
   }
   70% {
-    box-shadow: 0 0 0 9px rgba(226, 59, 59, 0);
+    opacity: 0;
+    transform: scale(2.6);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(226, 59, 59, 0);
+    opacity: 0;
+    transform: scale(2.6);
   }
-}
-
-.status {
-  align-items: center;
-  background: #edf2f4;
-  border: 1px solid var(--border-strong);
-  border-radius: 999px;
-  color: var(--muted-strong);
-  display: inline-flex;
-  font-size: 12px;
-  font-weight: 700;
-  gap: 6px;
-  min-height: 32px;
-  padding: 0 10px;
-  white-space: nowrap;
 }
 
 .status.recording {
@@ -606,20 +608,19 @@ button:focus-visible {
   align-items: center;
   display: flex;
   flex: 0 0 auto;
-  flex-wrap: wrap;
-  gap: 6px;
-  justify-content: flex-end;
+  gap: 10px;
   margin-left: auto;
 }
 
 .theme-select {
   align-items: center;
+  background: transparent;
   color: var(--muted-strong);
   display: inline-flex;
   flex: 0 0 auto;
   font-size: 11px;
-  font-weight: 600;
-  gap: 6px;
+  font-weight: 700;
+  gap: 8px;
   line-height: 1;
   white-space: nowrap;
 }
@@ -629,19 +630,25 @@ button:focus-visible {
   flex: 0 0 auto;
   font-size: 10px;
   letter-spacing: 0.06em;
-  opacity: 0.65;
   text-transform: uppercase;
 }
 
 .theme-select-field {
   align-items: center;
+  background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: 8px;
   display: inline-flex;
-  min-height: 28px;
+  min-height: 32px;
+  min-width: 128px;
   overflow: hidden;
+  padding-right: 2px;
   position: relative;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.theme-select-field:hover {
+  border-color: var(--border-strong);
 }
 
 .theme-select select {
@@ -654,10 +661,10 @@ button:focus-visible {
   color: var(--text);
   font-size: 12px;
   font-weight: 600;
-  min-height: 28px;
+  min-height: 32px;
   min-width: 0;
   outline: none;
-  padding: 0 26px 0 8px;
+  padding: 0 30px 0 10px;
   width: 100%;
 }
 
@@ -669,29 +676,33 @@ button:focus-visible {
   align-items: center;
   color: var(--muted);
   display: inline-flex;
-  inset: 0 7px 0 auto;
+  inset: 0 8px 0 auto;
   pointer-events: none;
   position: absolute;
 }
 
 .theme-select-caret svg {
   fill: none;
-  height: 11px;
+  height: 12px;
   stroke: currentColor;
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-width: 1.5;
-  width: 11px;
+  width: 12px;
 }
 
 .theme-select-field:focus-within {
   border-color: var(--teal);
-  box-shadow: 0 0 0 3px rgba(20, 114, 125, 0.14);
+  box-shadow: 0 0 0 3px rgba(20, 114, 125, 0.16);
 }
 
-@media (max-width: 360px) {
+@media (max-width: 380px) {
   .theme-select-label {
     display: none;
+  }
+
+  .theme-select-field {
+    min-width: 0;
   }
 }
 
@@ -699,15 +710,6 @@ button:focus-visible {
   display: grid;
   gap: 8px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.live-dot {
-  animation: pulse 1s ease-in-out infinite;
-  background: #d57b00;
-  border-radius: 50%;
-  display: inline-block;
-  height: 8px;
-  width: 8px;
 }
 
 .mini-note {
@@ -797,21 +799,6 @@ button:focus-visible {
   width: 1px;
 }
 
-@keyframes pulse {
-  0% {
-    opacity: 0.45;
-    transform: scale(0.9);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.15);
-  }
-  100% {
-    opacity: 0.45;
-    transform: scale(0.9);
-  }
-}
-
 :root[data-theme="dark"] {
   background: #10191d;
   color: #dce8ec;
@@ -855,9 +842,32 @@ button:focus-visible {
 }
 
 :root[data-theme="dark"] .status {
-  background: #24353c;
+  background: transparent;
   border-color: #2f464f;
   color: #dce8ec;
+}
+
+:root[data-theme="dark"] .status.is-idle {
+  background: rgba(149, 176, 184, 0.1);
+  border-color: #2f464f;
+}
+
+:root[data-theme="dark"] .status.is-complete {
+  background: rgba(24, 115, 76, 0.18);
+  border-color: rgba(24, 115, 76, 0.4);
+}
+
+:root[data-theme="dark"] .status.is-recording {
+  background: rgba(226, 59, 46, 0.16);
+  border-color: rgba(226, 59, 46, 0.4);
+}
+
+:root[data-theme="dark"] .status-dot {
+  background: #95b0b8;
+}
+
+:root[data-theme="dark"] .status.is-complete .status-dot {
+  background: #2ec27e;
 }
 
 :root[data-theme="dark"] .status.recording {
@@ -894,8 +904,35 @@ button:focus-visible {
 :root[data-theme="dark"] .confidence,
 :root[data-theme="dark"] .check,
 :root[data-theme="dark"] .preview pre {
-  background: #172328;
+  background: #1a272d;
   border-color: #2f464f;
+  color: #dce8ec;
+}
+
+:root[data-theme="dark"] .theme-select {
+  background: transparent;
+}
+
+:root[data-theme="dark"] .theme-select select {
+  background: transparent;
+  color: #dce8ec;
+}
+
+:root[data-theme="dark"] .theme-select-field:hover {
+  border-color: #455d68;
+}
+
+:root[data-theme="dark"] .theme-select-caret {
+  color: #95b0b8;
+}
+
+:root[data-theme="dark"] .theme-select-field:focus-within {
+  border-color: #45b7c0;
+  box-shadow: 0 0 0 3px rgba(69, 183, 192, 0.25);
+}
+
+:root[data-theme="dark"] select option {
+  background: #1a272d;
   color: #dce8ec;
 }
 
@@ -971,29 +1008,4 @@ button:focus-visible {
 :root[data-theme="dark"] select:focus {
   border-color: #45b7c0;
   box-shadow: 0 0 0 3px rgba(69, 183, 192, 0.25);
-}
-
-:root[data-theme="dark"] .theme-select-field {
-  background: transparent;
-}
-
-:root[data-theme="dark"] .theme-select-caret {
-  color: #95b0b8;
-}
-
-:root[data-theme="dark"] .theme-select select {
-  color: #dce8ec;
-}
-
-:root[data-theme="dark"] .theme-select-field:focus-within {
-  border-color: #45b7c0;
-  box-shadow: 0 0 0 3px rgba(69, 183, 192, 0.25);
-}
-
-:root[data-theme="dark"] .rec-beacon.complete .rec-beacon-dot {
-  background: #2e9e6a;
-}
-
-:root[data-theme="dark"] .rec-beacon.idle .rec-beacon-dot {
-  background: #6b8a93;
 }
