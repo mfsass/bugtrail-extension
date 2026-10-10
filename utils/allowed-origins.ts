@@ -16,7 +16,7 @@ const ALLOWED_HOSTS = new Set([
   "127.0.0.1",
 ]);
 
-export function isBuiltInBugTrailUrl(url: string): boolean {
+export function isBuiltInBugHunterUrl(url: string): boolean {
   try {
     const parsed = new URL(url);
     if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return false;
@@ -25,8 +25,6 @@ export function isBuiltInBugTrailUrl(url: string): boolean {
     return false;
   }
 }
-
-export const isAllowedBugTrailUrl = isBuiltInBugTrailUrl;
 
 export function matchForOrigin(url: string): string | undefined {
   try {
@@ -47,7 +45,7 @@ export function displayHostFromMatch(match: string): string {
   }
 }
 
-export function inferBugTrailContext(url: string): { app?: string; environment?: string } {
+export function inferBugHunterContext(url: string): { app?: string; environment?: string } {
   try {
     const parsed = new URL(url);
     const host = parsed.hostname.toLowerCase();
@@ -69,7 +67,7 @@ export function inferBugTrailContext(url: string): { app?: string; environment?:
 
 function inferEnvironmentFromHost(host: string): string | undefined {
   if (/(^|[-.])prod(uction)?([-.]|$)/i.test(host)) return "Production";
-  if (/(^|[-.])stage|staging([-.]|$)/i.test(host)) return "Stage";
+  if (/(^|[-.])stag(e|ing)([-.]|$)/i.test(host)) return "Stage";
   if (/(^|[-.])dev(elopment)?([-.]|$)/i.test(host)) return "Dev";
   if (/(^|[-.])qa([-.]|$)/i.test(host)) return "QA";
   if (/(^|[-.])test([-.]|$)/i.test(host)) return "Test";

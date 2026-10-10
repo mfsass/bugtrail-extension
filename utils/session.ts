@@ -1,5 +1,5 @@
 import { redactValue, tryParseAndRedact } from "./redaction";
-import type { BugTrailSession, BugTrailStep, ConsoleEvent, NetworkEvent } from "./types";
+import type { BugHunterSession, BugHunterStep, ConsoleEvent, NetworkEvent } from "./types";
 
 const CORRELATION_WINDOW_MS = 3000;
 const MAX_STEPS = 300;
@@ -15,7 +15,7 @@ export function createSession(input: {
   environment?: string;
   browser?: string;
   viewport?: string;
-}): BugTrailSession {
+}): BugHunterSession {
   const now = new Date().toISOString();
   return {
     id: `trail-${input.tabId}-${Date.now()}`,
@@ -43,9 +43,9 @@ export function createSession(input: {
   };
 }
 
-export function addStep(session: BugTrailSession, step: Omit<BugTrailStep, "id" | "index" | "relatedNetworkEventIds" | "relatedConsoleEventIds">): BugTrailSession {
+export function addStep(session: BugHunterSession, step: Omit<BugHunterStep, "id" | "index" | "relatedNetworkEventIds" | "relatedConsoleEventIds">): BugHunterSession {
   const index = nextStepIndex(session.steps);
-  const nextStep: BugTrailStep = {
+  const nextStep: BugHunterStep = {
     ...step,
     id: `step-${index}`,
     index,
@@ -61,7 +61,7 @@ export function addStep(session: BugTrailSession, step: Omit<BugTrailStep, "id" 
   };
 }
 
-export function addNetworkEvent(session: BugTrailSession, event: Omit<NetworkEvent, "id" | "redacted" | "relatedStepId">): BugTrailSession {
+export function addNetworkEvent(session: BugHunterSession, event: Omit<NetworkEvent, "id" | "redacted" | "relatedStepId">): BugHunterSession {
   const relatedStep = findRelatedStep(session.steps, event.timestamp);
   const duplicate = findDuplicateNetworkEvent(session.networkEvents, event);
   const id = duplicate?.id || `net-${session.networkEvents.length + 1}`;
@@ -94,7 +94,7 @@ export function addNetworkEvent(session: BugTrailSession, event: Omit<NetworkEve
   };
 }
 
-export function addConsoleEvent(session: BugTrailSession, event: Omit<ConsoleEvent, "id" | "relatedStepId">): BugTrailSession {
+export function addConsoleEvent(session: BugHunterSession, event: Omit<ConsoleEvent, "id" | "relatedStepId">): BugHunterSession {
   const relatedStep = findRelatedStep(session.steps, event.timestamp);
   const id = `console-${session.consoleEvents.length + 1}`;
   const nextEvent: ConsoleEvent = {
@@ -123,9 +123,9 @@ export function routeFromUrl(url: string): string {
 }
 
 export function expireStaleActiveSession(
-  state: { activeTabId?: number; session?: BugTrailSession },
+  state: { activeTabId?: number; session?: BugHunterSession },
   now = Date.now(),
-): { activeTabId?: number; session?: BugTrailSession } {
+): { activeTabId?: number; session?: BugHunterSession } {
   if (!state.session || state.session.endedAt) return state;
   const startedAt = Date.parse(state.session.startedAt);
   if (!Number.isFinite(startedAt) || now - startedAt <= ACTIVE_SESSION_TIMEOUT_MS) return state;
@@ -137,12 +137,12 @@ export function expireStaleActiveSession(
       ...state.session,
       endedAt: new Date(now).toISOString(),
       endUrl: state.session.endUrl || state.session.startUrl,
-      notes: appendNote(state.session.notes, "BugTrail auto-stopped this trail after 8 hours of inactivity."),
+      notes: appendNote(state.session.notes, "BugHunter auto-stopped this trail after 8 hours of inactivity."),
     },
   };
 }
 
-function findRelatedStep(steps: BugTrailStep[], timestamp: string): BugTrailStep | undefined {
+function findRelatedStep(steps: BugHunterStep[], timestamp: string): BugHunterStep | undefined {
   const eventMs = Date.parse(timestamp);
   const candidates = [...steps].reverse().filter((step) => {
     const delta = eventMs - Date.parse(step.timestamp);
@@ -151,17 +151,17 @@ function findRelatedStep(steps: BugTrailStep[], timestamp: string): BugTrailStep
   return candidates.find(isUserActionStep) || candidates[0] || steps.at(-1);
 }
 
-function isUserActionStep(step: BugTrailStep): boolean {
+function isUserActionStep(step: BugHunterStep): boolean {
   return step.type === "click" || step.type === "submit" || step.type === "input" || step.type === "select" || step.type === "bug-marker";
 }
 
-function attachNetwork(steps: BugTrailStep[], stepId: string, eventId: string): BugTrailStep[] {
+function attachNetwork(steps: BugHunterStep[], stepId: string, eventId: string): BugHunterStep[] {
   return steps.map((step) =>
     step.id === stepId ? { ...step, relatedNetworkEventIds: uniqueAppend(step.relatedNetworkEventIds, eventId) } : step,
   );
 }
 
-function attachConsole(steps: BugTrailStep[], stepId: string, eventId: string): BugTrailStep[] {
+function attachConsole(steps: BugHunterStep[], stepId: string, eventId: string): BugHunterStep[] {
   return steps.map((step) =>
     step.id === stepId ? { ...step, relatedConsoleEventIds: uniqueAppend(step.relatedConsoleEventIds, eventId) } : step,
   );
@@ -171,11 +171,11 @@ function uniqueAppend(values: string[], value: string): string[] {
   return values.includes(value) ? values : [...values, value];
 }
 
-function nextStepIndex(steps: BugTrailStep[]): number {
+function nextStepIndex(steps: BugHunterStep[]): number {
   return Math.max(0, ...steps.map((step) => step.index)) + 1;
 }
 
-function limitSteps(steps: BugTrailStep[]): BugTrailStep[] {
+function limitSteps(steps: BugHunterStep[]): BugHunterStep[] {
   if (steps.length <= MAX_STEPS) return steps;
   if (steps.length === 0) return steps;
   const first = steps.find((step) => step.type === "page-open") || steps[0];
@@ -192,7 +192,7 @@ function limitConsoleEvents(events: ConsoleEvent[]): ConsoleEvent[] {
   return events.length > MAX_CONSOLE_EVENTS ? events.slice(-MAX_CONSOLE_EVENTS) : events;
 }
 
-function pruneStepEvidenceReferences(steps: BugTrailStep[], networkEvents: NetworkEvent[], consoleEvents: ConsoleEvent[]): BugTrailStep[] {
+function pruneStepEvidenceReferences(steps: BugHunterStep[], networkEvents: NetworkEvent[], consoleEvents: ConsoleEvent[]): BugHunterStep[] {
   const networkIds = new Set(networkEvents.map((event) => event.id));
   const consoleIds = new Set(consoleEvents.map((event) => event.id));
   return steps.map((step) => ({

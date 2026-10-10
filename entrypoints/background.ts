@@ -1,8 +1,8 @@
 import { addConsoleEvent, addNetworkEvent, addStep, createSession, expireStaleActiveSession, routeFromUrl } from "../utils/session";
-import { ALLOWED_HOST_MATCHES, isBuiltInBugTrailUrl, matchForOrigin } from "../utils/allowed-origins";
-import type { BackgroundMessage, BugTrailRuntimeState, BugTrailSession, NetworkEvent } from "../utils/types";
+import { ALLOWED_HOST_MATCHES, isBuiltInBugHunterUrl, matchForOrigin } from "../utils/allowed-origins";
+import type { BackgroundMessage, BugHunterRuntimeState, BugHunterSession, NetworkEvent } from "../utils/types";
 
-const STATE_KEY = "bugtrail-state";
+const STATE_KEY = "bughunter-state";
 const pendingRequests = new Map<string, { method: string; url: string; startedAt: number; requestPayload?: unknown }>();
 let activeRecordingTabId: number | undefined;
 
@@ -51,28 +51,28 @@ export default defineBackground(() => {
 async function handleMessage(message: BackgroundMessage, sender: chrome.runtime.MessageSender) {
   const state = await getState();
 
-  if (message.kind === "bugtrail:get-state") return { ok: true, state };
-  if (message.kind === "bugtrail:clear") {
+  if (message.kind === "bughunter:get-state") return { ok: true, state };
+  if (message.kind === "bughunter:clear") {
     await setState({});
     return { ok: true, state: {} };
   }
 
-  if (message.kind === "bugtrail:inject-content") {
+  if (message.kind === "bughunter:inject-content") {
     await injectContentScript(message.tabId);
     return { ok: true, state };
   }
 
-  if (message.kind === "bugtrail:register-site") {
+  if (message.kind === "bughunter:register-site") {
     await registerContentScriptForOrigin(message.origin);
     return { ok: true, state };
   }
 
-  if (message.kind === "bugtrail:unregister-site") {
+  if (message.kind === "bughunter:unregister-site") {
     await unregisterContentScriptForOrigin(message.origin);
     return { ok: true, state };
   }
 
-  if (message.kind === "bugtrail:capture-screenshot") {
+  if (message.kind === "bughunter:capture-screenshot") {
     try {
       const windowId = await resolveCaptureWindowId(state);
       const dataUrl =
@@ -86,11 +86,11 @@ async function handleMessage(message: BackgroundMessage, sender: chrome.runtime.
     }
   }
 
-  if (message.kind === "bugtrail:start") {
+  if (message.kind === "bughunter:start") {
     const tab = await chrome.tabs.get(message.tabId);
     const tabUrl = tab.url || (await getTabUrl(message.tabId));
     if (!tabUrl || !(await canAccessUrl(tabUrl))) {
-      return { ok: false, state, error: `BugTrail is not enabled for this site: ${tabUrl || "unknown URL"}` };
+      return { ok: false, state, error: `BugHunter is not enabled for this site: ${tabUrl || "unknown URL"}` };
     }
     await injectContentScript(message.tabId);
     const session = createSession({
@@ -108,8 +108,8 @@ async function handleMessage(message: BackgroundMessage, sender: chrome.runtime.
 
   if (!state.session) return { ok: true, state };
 
-  if (message.kind === "bugtrail:stop") {
-    const session: BugTrailSession = {
+  if (message.kind === "bughunter:stop") {
+    const session: BugHunterSession = {
       ...state.session,
       endedAt: new Date().toISOString(),
       endUrl: state.session.endUrl || state.session.startUrl,
@@ -122,7 +122,7 @@ async function handleMessage(message: BackgroundMessage, sender: chrome.runtime.
     return { ok: true, state: nextState };
   }
 
-  if (message.kind === "bugtrail:mark-bug") {
+  if (message.kind === "bughunter:mark-bug") {
     const session = addStep(state.session, {
       type: "bug-marker",
       timestamp: new Date().toISOString(),
@@ -135,7 +135,7 @@ async function handleMessage(message: BackgroundMessage, sender: chrome.runtime.
     return { ok: true, state: nextState };
   }
 
-  if (message.kind === "bugtrail:set-inspect-mode") {
+  if (message.kind === "bughunter:set-inspect-mode") {
     if (state.session.endedAt || state.activeTabId == null) {
       return { ok: false, state, error: "Start a trail before inspecting an element." };
     }
@@ -144,25 +144,25 @@ async function handleMessage(message: BackgroundMessage, sender: chrome.runtime.
       await chrome.tabs.sendMessage(state.activeTabId, message);
       return { ok: true, state };
     } catch {
-      return { ok: false, state, error: "BugTrail could not activate element inspection on this tab." };
+      return { ok: false, state, error: "BugHunter could not activate element inspection on this tab." };
     }
   }
 
   if (sender.tab?.id !== state.activeTabId) return { ok: true, state };
 
-  if (message.kind === "bugtrail:step") {
+  if (message.kind === "bughunter:step") {
     const nextState = { ...state, session: addStep(state.session, message.step) };
     await setState(nextState);
     return { ok: true, state: nextState };
   }
 
-  if (message.kind === "bugtrail:console") {
+  if (message.kind === "bughunter:console") {
     const nextState = { ...state, session: addConsoleEvent(state.session, message.event) };
     await setState(nextState);
     return { ok: true, state: nextState };
   }
 
-  if (message.kind === "bugtrail:network") {
+  if (message.kind === "bughunter:network") {
     const nextState = { ...state, session: addNetworkEvent(state.session, message.event) };
     await setState(nextState);
     return { ok: true, state: nextState };
@@ -197,15 +197,15 @@ async function captureWebRequest(requestId: string, tabId: number, status: numbe
   await setState({ ...state, session: addNetworkEvent(state.session, event) });
 }
 
-async function getState(): Promise<BugTrailRuntimeState> {
+async function getState(): Promise<BugHunterRuntimeState> {
   const result = await chrome.storage.local.get(STATE_KEY);
-  const stored = (result[STATE_KEY] as BugTrailRuntimeState | undefined) || {};
+  const stored = (result[STATE_KEY] as BugHunterRuntimeState | undefined) || {};
   const recovered = expireStaleActiveSession(stored);
   if (recovered !== stored) await setState(recovered);
   return recovered;
 }
 
-async function setState(state: BugTrailRuntimeState): Promise<void> {
+async function setState(state: BugHunterRuntimeState): Promise<void> {
   activeRecordingTabId = state.session && !state.session.endedAt ? state.activeTabId : undefined;
   if (activeRecordingTabId == null) pendingRequests.clear();
   await chrome.storage.local.set({ [STATE_KEY]: state });
@@ -217,7 +217,7 @@ async function hydrateActiveRecordingTab(): Promise<void> {
 }
 
 async function canAccessUrl(url: string): Promise<boolean> {
-  if (isBuiltInBugTrailUrl(url)) return true;
+  if (isBuiltInBugHunterUrl(url)) return true;
   const origin = matchForOrigin(url);
   if (!origin) return false;
   return chrome.permissions.contains({ origins: [origin] });
@@ -272,7 +272,7 @@ async function unregisterContentScriptForOrigin(origin: string): Promise<void> {
 }
 
 function contentScriptIdForOrigin(origin: string): string {
-  return `bugtrail_${origin.replace(/[^a-zA-Z0-9_]/g, "_")}`;
+  return `bughunter_${origin.replace(/[^a-zA-Z0-9_]/g, "_")}`;
 }
 
 async function getViewport(tabId: number): Promise<string> {
@@ -299,7 +299,7 @@ async function getTabUrl(tabId: number): Promise<string | undefined> {
   }
 }
 
-async function resolveCaptureWindowId(state: BugTrailRuntimeState): Promise<number | undefined> {
+async function resolveCaptureWindowId(state: BugHunterRuntimeState): Promise<number | undefined> {
   if (state.activeTabId != null) {
     try {
       const tab = await chrome.tabs.get(state.activeTabId);
@@ -319,9 +319,9 @@ async function resolveCaptureWindowId(state: BugTrailRuntimeState): Promise<numb
 function captureErrorMessage(error: unknown): string {
   const raw = error instanceof Error ? error.message : String(error);
   if (/cannot.*capture|activeTab|permission|<all_urls>/i.test(raw)) {
-    return "BugTrail cannot capture this tab. Open the app tab you are testing, then try again.";
+    return "BugHunter cannot capture this tab. Open the app tab you are testing, then try again.";
   }
-  return "BugTrail could not capture the screen. Make sure the app tab is visible and try again.";
+  return "BugHunter could not capture the screen. Make sure the app tab is visible and try again.";
 }
 
 function extractRequestBody(body: chrome.webRequest.WebRequestBody | undefined): unknown {

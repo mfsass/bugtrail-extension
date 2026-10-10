@@ -3,30 +3,30 @@ import { createRoot } from "react-dom/client";
 import {
   ALLOWED_HOST_MATCHES,
   displayHostFromMatch,
-  inferBugTrailContext,
-  isBuiltInBugTrailUrl,
+  inferBugHunterContext,
+  isBuiltInBugHunterUrl,
   matchForOrigin,
 } from "../../utils/allowed-origins";
 import { displayRoute, displayUrlContext } from "../../utils/display";
 import {
-  bugTrailReportFilename,
-  buildBugTrailReport,
+  bugHunterReportFilename,
+  buildBugHunterReport,
 } from "../../utils/report";
 import { redactString } from "../../utils/redaction";
-import type { BugTrailRuntimeState } from "../../utils/types";
-import brandMarkUrl from "../../assets/bugtrail-logo.svg?url";
+import type { BugHunterRuntimeState } from "../../utils/types";
+import brandMarkUrl from "../../assets/bughunter-logo.svg?url";
 import "./style.css";
 
 type RuntimeResponse = {
   ok: boolean;
-  state?: BugTrailRuntimeState;
+  state?: BugHunterRuntimeState;
   error?: string;
   dataUrl?: string;
 };
 type ThemeMode = "system" | "light" | "dark";
 
 function App() {
-  const [state, setState] = useState<BugTrailRuntimeState>({});
+  const [state, setState] = useState<BugHunterRuntimeState>({});
   const [app, setApp] = useState("");
   const [environment, setEnvironment] = useState("");
   const [actualResult, setActualResult] = useState("");
@@ -50,7 +50,7 @@ function App() {
   const report = useMemo(
     () =>
       session
-        ? buildBugTrailReport({
+        ? buildBugHunterReport({
             ...session,
             actualResult,
             expectedResult,
@@ -62,11 +62,11 @@ function App() {
   const currentRoute = session?.endUrl || session?.startUrl || activeUrl;
   const currentOrigin = activeUrl ? matchForOrigin(activeUrl) : undefined;
   const inferredContext = useMemo(
-    () => inferBugTrailContext(activeUrl),
+    () => inferBugHunterContext(activeUrl),
     [activeUrl],
   );
   const canRunOnActiveSite = activeUrl
-    ? isBuiltInBugTrailUrl(activeUrl) ||
+    ? isBuiltInBugHunterUrl(activeUrl) ||
       Boolean(currentOrigin && grantedOrigins.includes(currentOrigin))
     : true;
   const userOrigins = grantedOrigins.filter(
@@ -82,9 +82,9 @@ function App() {
       changes: Record<string, chrome.storage.StorageChange>,
       area: string,
     ) => {
-      if (area === "local" && changes["bugtrail-state"]) {
-        const next = changes["bugtrail-state"].newValue as
-          | BugTrailRuntimeState
+      if (area === "local" && changes["bughunter-state"]) {
+        const next = changes["bughunter-state"].newValue as
+          | BugHunterRuntimeState
           | undefined;
         if (next) hydrateState(next);
       }
@@ -155,7 +155,7 @@ function App() {
 
   async function refreshState() {
     try {
-      const response = await send({ kind: "bugtrail:get-state" });
+      const response = await send({ kind: "bughunter:get-state" });
       if (response.state) hydrateState(response.state);
       const [tab] = await chrome.tabs.query({
         active: true,
@@ -167,7 +167,7 @@ function App() {
       setError(
         errorMessage(
           caught,
-          "BugTrail could not read the current browser state.",
+          "BugHunter could not read the current browser state.",
         ),
       );
     }
@@ -182,7 +182,7 @@ function App() {
     }
   }
 
-  function hydrateState(next: BugTrailRuntimeState) {
+  function hydrateState(next: BugHunterRuntimeState) {
     setState(next);
     setActualResult(next.session?.actualResult || "");
     setExpectedResult(next.session?.expectedResult || "");
@@ -197,16 +197,16 @@ function App() {
       });
       if (!tab?.id) throw new Error("No active tab is available.");
       setActiveUrl(tab.url || "");
-      const context = inferBugTrailContext(tab.url || activeUrl);
+      const context = inferBugHunterContext(tab.url || activeUrl);
       const response = await send({
-        kind: "bugtrail:start",
+        kind: "bughunter:start",
         tabId: tab.id,
         app: app || context.app,
         environment: environment || context.environment,
       });
       if (!response.ok)
         throw new Error(
-          response.error || "BugTrail could not start on this site.",
+          response.error || "BugHunter could not start on this site.",
         );
       if (response.state) hydrateState(response.state);
     });
@@ -221,7 +221,7 @@ function App() {
       setStatusMessage(actionLabel(action, "done"));
       window.setTimeout(() => setStatusMessage(""), 1800);
     } catch (caught) {
-      setError(errorMessage(caught, "BugTrail action failed."));
+      setError(errorMessage(caught, "BugHunter action failed."));
       setStatusMessage("");
     } finally {
       setBusyAction("");
@@ -230,8 +230,8 @@ function App() {
 
   async function loadThemePreference() {
     try {
-      const stored = await chrome.storage.local.get("bugtrail-theme-mode");
-      const next = stored["bugtrail-theme-mode"];
+      const stored = await chrome.storage.local.get("bughunter-theme-mode");
+      const next = stored["bughunter-theme-mode"];
       if (next === "light" || next === "dark" || next === "system") {
         setThemeMode(next);
       }
@@ -242,7 +242,7 @@ function App() {
 
   async function updateTheme(next: ThemeMode) {
     setThemeMode(next);
-    await chrome.storage.local.set({ "bugtrail-theme-mode": next });
+    await chrome.storage.local.set({ "bughunter-theme-mode": next });
   }
 
   async function addCurrentSite() {
@@ -254,14 +254,14 @@ function App() {
       const origin = tab?.url ? matchForOrigin(tab.url) : undefined;
       if (!origin || !tab?.id)
         throw new Error(
-          "BugTrail can only be enabled on normal http or https sites.",
+          "BugHunter can only be enabled on normal http or https sites.",
         );
 
       const granted = await chrome.permissions.request({ origins: [origin] });
       if (!granted) throw new Error("Site access was not granted.");
 
-      await send({ kind: "bugtrail:register-site", origin });
-      await send({ kind: "bugtrail:inject-content", tabId: tab.id });
+      await send({ kind: "bughunter:register-site", origin });
+      await send({ kind: "bughunter:inject-content", tabId: tab.id });
       await refreshGrantedOrigins();
       setActiveUrl(tab.url || "");
     });
@@ -269,7 +269,7 @@ function App() {
 
   async function removeSite(origin: string) {
     await runAction(`remove-${origin}`, async () => {
-      await send({ kind: "bugtrail:unregister-site", origin });
+      await send({ kind: "bughunter:unregister-site", origin });
       await chrome.permissions.remove({ origins: [origin] });
       await refreshGrantedOrigins();
     });
@@ -278,22 +278,22 @@ function App() {
   async function stopTrail() {
     await runAction("stop", async () => {
       const response = await send({
-        kind: "bugtrail:stop",
+        kind: "bughunter:stop",
         actualResult,
         expectedResult,
         notes,
       });
       if (!response.ok)
-        throw new Error(response.error || "BugTrail could not stop the trail.");
+        throw new Error(response.error || "BugHunter could not stop the trail.");
       if (response.state) hydrateState(response.state);
     });
   }
 
   async function markBug() {
     await runAction("mark", async () => {
-      const response = await send({ kind: "bugtrail:mark-bug" });
+      const response = await send({ kind: "bughunter:mark-bug" });
       if (!response.ok)
-        throw new Error(response.error || "BugTrail could not mark the bug.");
+        throw new Error(response.error || "BugHunter could not mark the bug.");
       if (response.state) hydrateState(response.state);
     });
   }
@@ -301,12 +301,12 @@ function App() {
   async function setElementInspection(enabled: boolean) {
     await runAction(enabled ? "inspect-on" : "inspect-off", async () => {
       const response = await send({
-        kind: "bugtrail:set-inspect-mode",
+        kind: "bughunter:set-inspect-mode",
         enabled,
       });
       if (!response.ok)
         throw new Error(
-          response.error || "BugTrail could not update element inspection.",
+          response.error || "BugHunter could not update element inspection.",
         );
       setIsInspectingElement(enabled);
       setInspectionStartStepCount(enabled ? session?.steps.length || 0 : undefined);
@@ -316,10 +316,10 @@ function App() {
   async function copyScreenshot() {
     await runAction("screenshot", async () => {
       const screenshot = (async () => {
-        const response = await send({ kind: "bugtrail:capture-screenshot" });
+        const response = await send({ kind: "bughunter:capture-screenshot" });
         if (!response.ok || !response.dataUrl)
           throw new Error(
-            response.error || "BugTrail could not capture the screen.",
+            response.error || "BugHunter could not capture the screen.",
           );
         const blob = await (await fetch(response.dataUrl)).blob();
         return blob.type === "image/png"
@@ -334,10 +334,10 @@ function App() {
 
   async function clearTrail() {
     await runAction("clear", async () => {
-      const response = await send({ kind: "bugtrail:clear" });
+      const response = await send({ kind: "bughunter:clear" });
       if (!response.ok)
         throw new Error(
-          response.error || "BugTrail could not clear the trail.",
+          response.error || "BugHunter could not clear the trail.",
         );
       setCopyStatus("");
       hydrateState(response.state || {});
@@ -355,13 +355,13 @@ function App() {
   async function downloadReport() {
     await runAction("download", async () => {
       if (!session)
-        throw new Error("No completed BugTrail report is available.");
+        throw new Error("No completed BugHunter report is available.");
       const url = URL.createObjectURL(
         new Blob([report], { type: "text/markdown;charset=utf-8" }),
       );
       const anchor = document.createElement("a");
       anchor.href = url;
-      anchor.download = bugTrailReportFilename({
+      anchor.download = bugHunterReportFilename({
         ...session,
         actualResult,
         expectedResult,
@@ -424,7 +424,7 @@ function App() {
             aria-hidden="true"
           />
           <div className="brand-copy">
-            <h1>BugTrail</h1>
+            <h1>BugHunter</h1>
           </div>
         </div>
         <div className="topbar-right">
@@ -487,7 +487,7 @@ function App() {
       {statusMessage && <p className="notice success">{statusMessage}</p>}
       {!canRunOnActiveSite && !session && (
         <p className="notice">
-          BugTrail is not enabled for this site yet. Add it once to make
+          BugHunter is not enabled for this site yet. Add it once to make
           recording available here.
         </p>
       )}
@@ -839,7 +839,7 @@ function CameraIcon() {
 async function send(message: unknown): Promise<RuntimeResponse> {
   const response = await chrome.runtime.sendMessage(message);
   if (!response || typeof response !== "object")
-    return { ok: false, error: "BugTrail background did not respond." };
+    return { ok: false, error: "BugHunter background did not respond." };
   return response as RuntimeResponse;
 }
 

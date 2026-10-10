@@ -1,4 +1,4 @@
-export type BugTrailStepType =
+export type BugHunterStepType =
   | "page-open"
   | "route-change"
   | "click"
@@ -8,7 +8,7 @@ export type BugTrailStepType =
   | "note"
   | "bug-marker";
 
-export type BugTrailElement = {
+export type BugHunterElement = {
   tag?: string;
   text?: string;
   role?: string;
@@ -22,15 +22,15 @@ export type BugTrailElement = {
   value?: string;
 };
 
-export type BugTrailStep = {
+export type BugHunterStep = {
   id: string;
   index: number;
   timestamp: string;
-  type: BugTrailStepType;
+  type: BugHunterStepType;
   url: string;
   route?: string;
   label?: string;
-  element?: BugTrailElement;
+  element?: BugHunterElement;
   relatedNetworkEventIds: string[];
   relatedConsoleEventIds: string[];
 };
@@ -62,7 +62,7 @@ export type ConsoleEvent = {
   relatedStepId?: string;
 };
 
-export type BugTrailSession = {
+export type BugHunterSession = {
   id: string;
   startedAt: string;
   endedAt?: string;
@@ -72,7 +72,7 @@ export type BugTrailSession = {
   endUrl?: string;
   browser: string;
   viewport: string;
-  steps: BugTrailStep[];
+  steps: BugHunterStep[];
   networkEvents: NetworkEvent[];
   consoleEvents: ConsoleEvent[];
   actualResult?: string;
@@ -80,9 +80,9 @@ export type BugTrailSession = {
   notes?: string;
 };
 
-export type BugTrailRuntimeState = {
+export type BugHunterRuntimeState = {
   activeTabId?: number;
-  session?: BugTrailSession;
+  session?: BugHunterSession;
 };
 
 export type SiteAccessStatus = {
@@ -95,32 +95,31 @@ export type SiteAccessStatus = {
 };
 
 export type CapturedStepMessage = {
-  kind: "bugtrail:step";
-  step: Omit<BugTrailStep, "id" | "index" | "relatedNetworkEventIds" | "relatedConsoleEventIds">;
+  kind: "bughunter:step";
+  step: Omit<BugHunterStep, "id" | "index" | "relatedNetworkEventIds" | "relatedConsoleEventIds">;
 };
 
 export type CapturedConsoleMessage = {
-  kind: "bugtrail:console";
+  kind: "bughunter:console";
   event: Omit<ConsoleEvent, "id" | "relatedStepId">;
 };
 
 export type CapturedNetworkMessage = {
-  kind: "bugtrail:network";
+  kind: "bughunter:network";
   event: Omit<NetworkEvent, "id" | "redacted" | "relatedStepId">;
 };
 
 export type BackgroundMessage =
-  | { kind: "bugtrail:start"; tabId: number; app?: string; environment?: string }
-  | { kind: "bugtrail:stop"; actualResult?: string; expectedResult?: string; notes?: string }
-  | { kind: "bugtrail:clear" }
-  | { kind: "bugtrail:get-state" }
-  | { kind: "bugtrail:get-site-access"; url: string }
-  | { kind: "bugtrail:inject-content"; tabId: number }
-  | { kind: "bugtrail:register-site"; origin: string }
-  | { kind: "bugtrail:unregister-site"; origin: string }
-  | { kind: "bugtrail:mark-bug" }
-  | { kind: "bugtrail:set-inspect-mode"; enabled: boolean }
-  | { kind: "bugtrail:capture-screenshot" }
+  | { kind: "bughunter:start"; tabId: number; app?: string; environment?: string }
+  | { kind: "bughunter:stop"; actualResult?: string; expectedResult?: string; notes?: string }
+  | { kind: "bughunter:clear" }
+  | { kind: "bughunter:get-state" }
+  | { kind: "bughunter:inject-content"; tabId: number }
+  | { kind: "bughunter:register-site"; origin: string }
+  | { kind: "bughunter:unregister-site"; origin: string }
+  | { kind: "bughunter:mark-bug" }
+  | { kind: "bughunter:set-inspect-mode"; enabled: boolean }
+  | { kind: "bughunter:capture-screenshot" }
   | CapturedStepMessage
   | CapturedConsoleMessage
   | CapturedNetworkMessage;

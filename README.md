@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="docs/images/bugtrail-brand.png" alt="BugTrail" width="220" />
+  <img src="docs/images/bughunter-brand.png" alt="BugHunter" width="560" />
 </p>
 
-<h1 align="center">BugTrail</h1>
+<h1 align="center">BugHunter</h1>
 
 <p align="center">
   <strong>Local-first Chrome extension for QA → developer handoff.</strong><br />
@@ -10,21 +10,21 @@
 </p>
 
 <p align="center">
-  <img alt="Version" src="https://img.shields.io/badge/version-0.1.0-14727d" />
+  <img alt="Version" src="https://img.shields.io/badge/version-1.0.0-14727d" />
   <img alt="Chrome MV3" src="https://img.shields.io/badge/Chrome-MV3-4285F4" />
   <img alt="Brave" src="https://img.shields.io/badge/Brave-supported-FB542B" />
   <img alt="License" src="https://img.shields.io/badge/license-private%20pilot-lightgrey" />
 </p>
 
 <p align="center">
-  <img src="docs/images/bugtrail-sidepanel.png" alt="BugTrail side panel recording a trail" width="420" />
+  <img src="docs/images/bughunter-sidepanel.png" alt="BugHunter side panel recording a trail" width="720" />
 </p>
 
 ---
 
 ## What it does
 
-BugTrail sits in the browser side panel while you reproduce a bug. It captures the journey developers actually need:
+BugHunter sits in the browser side panel while you reproduce a bug. It captures the journey developers actually need:
 
 - Clicks, routes, inputs, selects, and submits
 - Console errors, warnings, and unhandled exceptions
@@ -32,7 +32,7 @@ BugTrail sits in the browser side panel while you reproduce a bug. It captures t
 - Bug markers and optional front-end element inspection
 - A Markdown report you can copy or save
 
-Everything stays in the browser. BugTrail has **no backend** and does not upload reports.
+Everything stays in the browser. BugHunter has **no backend** and does not upload reports.
 
 ---
 
@@ -57,7 +57,7 @@ npm run build
 ### 3. Record a trail
 
 1. Open the app you are testing
-2. Click the BugTrail icon to open the side panel
+2. Click the BugHunter icon to open the side panel
 3. Confirm app / environment (auto-inferred when possible)
 4. Click **Start Trail**
 5. Reproduce the issue
@@ -81,8 +81,8 @@ npm run zip
 This produces:
 
 ```text
-.output/bugtrail-extension-0.1.0-chrome.zip
-.output/bugtrail-extension-0.1.0-chrome.zip.sha256
+.output/bughunter-extension-1.0.0-chrome.zip
+.output/bughunter-extension-1.0.0-chrome.zip.sha256
 .output/release-manifest.json
 ```
 
@@ -107,7 +107,7 @@ Full QA install / update notes: [docs/qa-install-guide.md](docs/qa-install-guide
 | **Copy screenshot** | Copy the visible app tab to the clipboard |
 | **Stop Trail** | Finish recording and draft the report |
 | **Copy Report / Save .md** | Hand the report to a developer |
-| **Add this site** | Enable BugTrail on a new app (one browser prompt) |
+| **Add this site** | Enable BugHunter on a new app (one browser prompt) |
 
 ### Site access
 
@@ -116,11 +116,11 @@ Built-in access includes localhost and the Spur rewards-admin environments.
 For any other app:
 
 1. Open the app in the browser
-2. Open the BugTrail side panel
+2. Open the BugHunter side panel
 3. Click **Add this site**
 4. Approve the permission prompt
 
-BugTrail remembers that origin. You can remove custom sites from the side panel.
+BugHunter remembers that origin. You can remove custom sites from the side panel.
 
 ---
 
@@ -156,7 +156,7 @@ npm run verify:release
 Optional browser path for the smoke test:
 
 ```powershell
-$env:BUGTRAIL_BROWSER='C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe'
+$env:BUGHUNTER_BROWSER='C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe'
 npm run smoke:runtime
 ```
 
@@ -167,16 +167,16 @@ npm run smoke:runtime
 1. Pull latest / receive a new zip
 2. Run `npm install` if needed, then `npm run build` (or extract the new zip)
 3. Open `chrome://extensions`
-4. Click **Reload** on the BugTrail card
+4. Click **Reload** on the BugHunter card
 
 ---
 
 ## Privacy & permissions
 
-BugTrail is local-first:
+BugHunter is local-first:
 
 - Stores trails in the browser profile only
-- Does not send data to a BugTrail server
+- Does not send data to a BugHunter server
 - Redacts common secrets and PII before report text is shown
 - Screenshots are copied to the clipboard on demand and are never stored by the extension
 
@@ -189,8 +189,12 @@ Permission rationale and boundaries: [docs/permissions-and-privacy.md](docs/perm
 | Doc | Purpose |
 | --- | --- |
 | [QA install guide](docs/qa-install-guide.md) | Pilot install, verify zip hash, update flow |
-| [Permissions & privacy](docs/permissions-and-privacy.md) | What BugTrail stores and why permissions exist |
-| [Release notes 0.1.0](docs/release-notes-0.1.0.md) | Pilot release notes |
+| [Permissions & privacy](docs/permissions-and-privacy.md) | What BugHunter stores and why permissions exist |
+| [Release notes 1.0.0](docs/release-notes-1.0.0.md) | What changed, including the BugTrail to BugHunter rename |
+| [Store launch checklist](docs/store/launch-checklist.md) | Go-live runbook for the Chrome Web Store |
+| [Remaining actions](docs/store/remaining-actions.md) | What is still needed before go-live |
+| [Store listing copy](docs/store/listing.md) | Paste-ready listing text and permission justifications |
+| [Privacy policy](docs/store/privacy-policy.md) | Publishable policy for the store listing |
 | [Live pilot checklist](docs/live-pilot-checklist.md) | Capture evidence before wider rollout |
 | [Production readiness](docs/production-readiness.md) | Readiness checklist |
 | [Signoff review](docs/signoff-review.md) | Signoff checklist |
@@ -208,4 +212,4 @@ Permission rationale and boundaries: [docs/permissions-and-privacy.md](docs/perm
 
 ## License / distribution
 
-BugTrail 0.1.0 is intended for controlled pilot use. For wider rollout, prefer a private/unlisted Chrome Web Store listing or Chrome Enterprise policy rather than an `.exe` installer.
+BugHunter 1.0.0 is prepared for a Chrome Web Store release. Prefer a private or unlisted listing, or Chrome Enterprise policy, over an `.exe` installer. See `docs/store/launch-checklist.md`.

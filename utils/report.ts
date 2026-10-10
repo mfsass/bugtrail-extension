@@ -1,10 +1,10 @@
 import { redactString, redactValue } from "./redaction";
-import type { BugTrailSession, BugTrailStep, ConsoleEvent, NetworkEvent } from "./types";
+import type { BugHunterSession, BugHunterStep, ConsoleEvent, NetworkEvent } from "./types";
 
 const MAX_PRIMARY_STEPS = 20;
 
-export function buildBugTrailReport(session: BugTrailSession): string {
-  const lines: string[] = ["# BugTrail Report", "", "## Summary", summaryFor(session), "", "## Environment"];
+export function buildBugHunterReport(session: BugHunterSession): string {
+  const lines: string[] = ["# BugHunter Report", "", "## Summary", summaryFor(session), "", "## Environment"];
 
   lines.push(`- App: ${redactString(session.app || "")}`);
   lines.push(`- Environment: ${redactString(session.environment || "")}`);
@@ -34,19 +34,19 @@ export function buildBugTrailReport(session: BugTrailSession): string {
   pushOptionalSection(lines, "Actual Result", session.actualResult);
   pushOptionalSection(lines, "Expected Result", session.expectedResult);
   pushOptionalSection(lines, "Notes", session.notes);
-  lines.push("## End of BugTrail Report");
+  lines.push("## End of BugHunter Report");
 
   return lines.join("\n").trimEnd() + "\n";
 }
 
-export function bugTrailReportFilename(session: BugTrailSession): string {
-  const app = slugPart(session.app || "bugtrail");
+export function bugHunterReportFilename(session: BugHunterSession): string {
+  const app = slugPart(session.app || "bughunter");
   const environment = slugPart(session.environment || "report");
   const timestamp = new Date(session.startedAt).toISOString().replace(/[:.]/g, "-");
   return `${app}-${environment}-${timestamp}.md`;
 }
 
-function appendStep(lines: string[], step: BugTrailStep, session: BugTrailSession): void {
+function appendStep(lines: string[], step: BugHunterStep, session: BugHunterSession): void {
   lines.push(`${step.index}. ${stepSentence(step)}`);
 
   if (step.element?.tag) lines.push(`   - Element: \`${redactString(step.element.tag)}\``);
@@ -80,11 +80,11 @@ function appendStep(lines: string[], step: BugTrailStep, session: BugTrailSessio
   lines.push("");
 }
 
-function selectVisibleSteps(session: BugTrailSession): BugTrailStep[] {
+function selectVisibleSteps(session: BugHunterSession): BugHunterStep[] {
   if (session.steps.length <= MAX_PRIMARY_STEPS) return session.steps;
 
   const importantIds = importantStepIds(session);
-  const selected = new Map<string, BugTrailStep>();
+  const selected = new Map<string, BugHunterStep>();
   for (const step of session.steps.slice(0, MAX_PRIMARY_STEPS)) selected.set(step.id, step);
 
   for (const step of session.steps) {
@@ -102,7 +102,7 @@ function selectVisibleSteps(session: BugTrailSession): BugTrailStep[] {
   return [...selected.values()].sort((a, b) => a.index - b.index);
 }
 
-function importantStepIds(session: BugTrailSession): Set<string> {
+function importantStepIds(session: BugHunterSession): Set<string> {
   const important = new Set<string>();
   for (const step of session.steps) {
     if (step.type === "bug-marker" || step.relatedConsoleEventIds.length > 0) important.add(step.id);
@@ -147,7 +147,7 @@ function appendConsoleOutput(lines: string[], events: ConsoleEvent[]): void {
   lines.push("");
 }
 
-function stepSentence(step: BugTrailStep): string {
+function stepSentence(step: BugHunterStep): string {
   const label = redactString(step.label || step.element?.text || step.element?.ariaLabel || step.element?.name || step.element?.selector || "element");
   switch (step.type) {
     case "page-open":
@@ -187,7 +187,7 @@ function appendJsonBlock(lines: string[], label: string, value: unknown, indent 
   lines.push("");
 }
 
-function summaryFor(session: BugTrailSession): string {
+function summaryFor(session: BugHunterSession): string {
   const failed = session.networkEvents.filter((event) => (event.status ?? 0) >= 400).length;
   const errors = session.consoleEvents.filter((event) => event.level === "error").length;
   if (failed || errors) return `${session.steps.length} steps captured with ${failed} failed API call(s) and ${errors} console error(s).`;
@@ -218,7 +218,7 @@ function capitalize(value: string): string {
 function slugPart(value: string): string {
   const redacted = redactString(value).toLowerCase();
   const slug = redacted.replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
-  return slug || "bugtrail";
+  return slug || "bughunter";
 }
 
 function pushOptionalSection(lines: string[], title: string, value?: string): void {

@@ -9,5 +9,5 @@ for (const size of [16, 32, 48, 128]) {
   copyFileSync(join(root, "assets", `icon-${size}.png`), join(targetDir, `icon-${size}.png`));
 }
 
-copyFileSync(join(root, "assets", "bugtrail-logo.svg"), join(targetDir, "bugtrail-logo.svg"));
+copyFileSync(join(root, "assets", "bughunter-logo.svg"), join(targetDir, "bughunter-logo.svg"));
 console.log("Brand assets synced to public/assets");

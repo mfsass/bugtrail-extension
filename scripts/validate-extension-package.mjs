@@ -24,8 +24,8 @@ const requiredOptionalHosts = ["http://*/*", "https://*/*"];
 const requiredPermissions = ["storage", "sidePanel", "scripting", "activeTab", "tabs", "webRequest"];
 
 if (manifest.manifest_version !== 3) fail("manifest version must be 3");
-if (manifest.name !== "BugTrail") fail("manifest name must be BugTrail");
-if (manifest.description !== "Turn QA clicks into developer-ready bug trails.") fail("unexpected manifest description");
+if (manifest.name !== "BugHunter") fail("manifest name must be BugHunter");
+if (manifest.description !== "Turn QA clicks into developer-ready bug reports with steps, API calls, and console errors.") fail("unexpected manifest description");
 if (!/^\d+\.\d+\.\d+$/.test(manifest.version || "")) fail("manifest version must be semver-like");
 
 for (const permission of requiredPermissions) {

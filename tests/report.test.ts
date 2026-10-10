@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { bugTrailReportFilename, buildBugTrailReport } from "../utils/report";
-import type { BugTrailSession, BugTrailStep } from "../utils/types";
+import { bugHunterReportFilename, buildBugHunterReport } from "../utils/report";
+import type { BugHunterSession, BugHunterStep } from "../utils/types";
 
-describe("buildBugTrailReport", () => {
+describe("buildBugHunterReport", () => {
   it("builds one pasteable Markdown report with correlated failed network and console evidence", () => {
-    const session: BugTrailSession = {
+    const session: BugHunterSession = {
       id: "session-1",
       startedAt: "2026-06-01T08:32:00.000Z",
       endedAt: "2026-06-01T08:35:00.000Z",
@@ -74,9 +74,9 @@ describe("buildBugTrailReport", () => {
       notes: "Bug appears after Save.",
     };
 
-    const report = buildBugTrailReport(session);
+    const report = buildBugHunterReport(session);
 
-    expect(report).toContain("# BugTrail Report");
+    expect(report).toContain("# BugHunter Report");
     expect(report).toContain("- App: Spur Admin");
     expect(report).toContain("2. Clicked **Save**.");
     expect(report).toContain("- Test ID: `save-customer-button`");
@@ -84,11 +84,11 @@ describe("buildBugTrailReport", () => {
     expect(report).toContain("\"email\": \"[REDACTED_EMAIL]\"");
     expect(report).toContain("- Error after Step 2: `Cannot read properties of undefined`");
     expect(report).toContain("## Actual Result\nProfile did not save.");
-    expect(report).toContain("## End of BugTrail Report");
+    expect(report).toContain("## End of BugHunter Report");
   });
 
   it("redacts sensitive values in network paths and input steps", () => {
-    const session: BugTrailSession = {
+    const session: BugHunterSession = {
       id: "session-2",
       startedAt: "2026-06-01T08:32:00.000Z",
       app: "Spur Admin",
@@ -130,7 +130,7 @@ describe("buildBugTrailReport", () => {
       consoleEvents: [],
     };
 
-    const report = buildBugTrailReport(session);
+    const report = buildBugHunterReport(session);
 
     expect(report).toContain("- Value: `[REDACTED_EMAIL]`");
     expect(report).toContain("Changed **Email [REDACTED_EMAIL]** field.");
@@ -143,7 +143,7 @@ describe("buildBugTrailReport", () => {
   });
 
   it("redacts free-text result and note fields", () => {
-    const report = buildBugTrailReport({
+    const report = buildBugHunterReport({
       id: "session-free-text",
       startedAt: "2026-06-01T08:32:00.000Z",
       app: "Rewards Admin",
@@ -170,7 +170,7 @@ describe("buildBugTrailReport", () => {
   });
 
   it("omits empty actual expected and notes sections", () => {
-    const report = buildBugTrailReport({
+    const report = buildBugHunterReport({
       id: "session-empty-fields",
       startedAt: "2026-06-01T08:32:00.000Z",
       app: "Rewards Admin",
@@ -189,11 +189,11 @@ describe("buildBugTrailReport", () => {
     expect(report).not.toContain("## Actual Result");
     expect(report).not.toContain("## Expected Result");
     expect(report).not.toContain("## Notes");
-    expect(report).toContain("## End of BugTrail Report");
+    expect(report).toContain("## End of BugHunter Report");
   });
 
   it("builds a safe Markdown filename for downloaded reports", () => {
-    const filename = bugTrailReportFilename({
+    const filename = bugHunterReportFilename({
       id: "session-4",
       startedAt: "2026-06-01T08:32:00.000Z",
       app: "Rewards Admin",
@@ -210,7 +210,7 @@ describe("buildBugTrailReport", () => {
   });
 
   it("redacts metadata, element identifiers, console text, and unavailable reasons", () => {
-    const report = buildBugTrailReport({
+    const report = buildBugHunterReport({
       id: "session-5",
       startedAt: "2026-06-01T08:32:00.000Z",
       app: "Rewards qa@example.com",
@@ -278,7 +278,7 @@ describe("buildBugTrailReport", () => {
   });
 
   it("includes inspected front-end element references for bug markers", () => {
-    const report = buildBugTrailReport({
+    const report = buildBugHunterReport({
       id: "session-front-end-marker",
       startedAt: "2026-06-01T08:32:00.000Z",
       app: "Rewards Admin",
@@ -319,7 +319,7 @@ describe("buildBugTrailReport", () => {
   });
 
   it("keeps failed API steps visible when low-value steps exceed the primary step limit", () => {
-    const steps: BugTrailStep[] = Array.from({ length: 22 }, (_, offset) => ({
+    const steps: BugHunterStep[] = Array.from({ length: 22 }, (_, offset) => ({
       id: `step-${offset + 1}`,
       index: offset + 1,
       timestamp: `2026-06-01T08:32:${String(offset).padStart(2, "0")}.000Z`,
@@ -342,7 +342,7 @@ describe("buildBugTrailReport", () => {
       relatedConsoleEventIds: [],
     });
 
-    const report = buildBugTrailReport({
+    const report = buildBugHunterReport({
       id: "session-3",
       startedAt: "2026-06-01T08:32:00.000Z",
       app: "Spur Admin",

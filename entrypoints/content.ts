@@ -6,9 +6,9 @@ export default defineContentScript({
   matches: [...ALLOWED_HOST_MATCHES],
   runAt: "document_start",
   main() {
-    const loadGuard = window as Window & { __bugtrailContentLoaded?: boolean };
-    if (loadGuard.__bugtrailContentLoaded) return;
-    loadGuard.__bugtrailContentLoaded = true;
+    const loadGuard = window as Window & { __bughunterContentLoaded?: boolean };
+    if (loadGuard.__bughunterContentLoaded) return;
+    loadGuard.__bughunterContentLoaded = true;
 
     const bridgeChannel = createBridgeChannel();
 
@@ -38,7 +38,7 @@ export default defineContentScript({
       if (location.href === lastUrl) return;
       lastUrl = location.href;
       send({
-        kind: "bugtrail:step",
+        kind: "bughunter:step",
         step: {
           type: "route-change",
           timestamp: new Date().toISOString(),
@@ -63,7 +63,7 @@ export default defineContentScript({
           event.stopImmediatePropagation();
           setInspectMode(false);
           send({
-            kind: "bugtrail:step",
+            kind: "bughunter:step",
             step: {
               type: "bug-marker",
               timestamp: new Date().toISOString(),
@@ -85,7 +85,7 @@ export default defineContentScript({
         lastClickSignature = signature;
         lastClickAt = now;
         send({
-          kind: "bugtrail:step",
+          kind: "bughunter:step",
           step: {
             type: isSubmit(target) ? "submit" : "click",
             timestamp: new Date().toISOString(),
@@ -139,7 +139,7 @@ export default defineContentScript({
       if (!isBridgeDetail(detail)) return;
       if (detail?.kind === "console") {
         send({
-          kind: "bugtrail:console",
+          kind: "bughunter:console",
           event: {
             level: detail.level === "warn" ? "warn" : "error",
             message: stringValue(detail.message),
@@ -152,7 +152,7 @@ export default defineContentScript({
       if (detail?.kind === "network") {
         const url = stringValue(detail.url, location.href);
         send({
-          kind: "bugtrail:network",
+          kind: "bughunter:network",
           event: {
             method: stringValue(detail.method, "GET").toUpperCase(),
             url,
@@ -170,11 +170,11 @@ export default defineContentScript({
     };
 
     window.addEventListener("message", (event) => {
-      if (event.data?.source !== "bugtrail-page" || event.data?.channel !== bridgeChannel) return;
+      if (event.data?.source !== "bughunter-page" || event.data?.channel !== bridgeChannel) return;
       handleBridgeDetail(event.data.detail);
     });
 
-    document.addEventListener("bugtrail-page-event", (event) => {
+    document.addEventListener("bughunter-page-event", (event) => {
       const customEvent = event as CustomEvent<{ channel?: string; detail?: unknown }>;
       if (customEvent.detail?.channel !== bridgeChannel) return;
       handleBridgeDetail(customEvent.detail.detail);
@@ -187,7 +187,7 @@ export default defineContentScript({
 type BridgeDetail = BridgeConsoleDetail | BridgeNetworkDetail;
 
 type InspectModeMessage = {
-  kind: "bugtrail:set-inspect-mode";
+  kind: "bughunter:set-inspect-mode";
   enabled: boolean;
 };
 
@@ -222,7 +222,7 @@ function isBridgeDetail(detail: unknown): detail is BridgeDetail {
 function isInspectModeMessage(message: unknown): message is InspectModeMessage {
   if (!message || typeof message !== "object") return false;
   const candidate = message as { kind?: unknown; enabled?: unknown };
-  return candidate.kind === "bugtrail:set-inspect-mode" && typeof candidate.enabled === "boolean";
+  return candidate.kind === "bughunter:set-inspect-mode" && typeof candidate.enabled === "boolean";
 }
 
 function stringValue(value: unknown, fallback = ""): string {
@@ -254,7 +254,7 @@ function commitInputStep(
   if (value === previous) return;
   lastCommittedInputValue.set(target, value);
   send({
-    kind: "bugtrail:step",
+    kind: "bughunter:step",
     step: {
       type: target.tagName.toLowerCase() === "select" ? "select" : "input",
       timestamp: new Date().toISOString(),
@@ -276,7 +276,7 @@ function isNoiseInputClick(element: HTMLElement): boolean {
 }
 
 function createBridgeChannel(): string {
-  return `bugtrail-${crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`}`;
+  return `bughunter-${crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`}`;
 }
 
 function injectPageBridge(channel: string): void {
@@ -291,7 +291,7 @@ function injectPageBridge(channel: string): void {
 
 function closestElement(target: EventTarget | null): HTMLElement | undefined {
   return target instanceof HTMLElement
-    ? target.closest<HTMLElement>("button,a,input,textarea,select,[role='button'],[data-bugtrail-action],[onclick]") || undefined
+    ? target.closest<HTMLElement>("button,a,input,textarea,select,[role='button'],[data-bughunter-action],[data-bugtrail-action],[onclick]") || undefined
     : undefined;
 }
 
@@ -312,10 +312,18 @@ function isSubmit(element: HTMLElement): boolean {
   return element instanceof HTMLButtonElement && element.type === "submit" && Boolean(element.form);
 }
 
+function annotation(element: HTMLElement, name: "component" | "action" | "field"): string | undefined {
+  return (
+    element.getAttribute(`data-bughunter-${name}`) ||
+    element.getAttribute(`data-bugtrail-${name}`) ||
+    undefined
+  );
+}
+
 function labelFor(element: HTMLElement): string {
   return (
-    element.getAttribute("data-bugtrail-action") ||
-    element.getAttribute("data-bugtrail-field") ||
+    annotation(element, "action") ||
+    annotation(element, "field") ||
     element.getAttribute("aria-label") ||
     labelText(element) ||
     element.getAttribute("placeholder") ||
@@ -335,9 +343,9 @@ function elementInfo(element: HTMLElement) {
     name: element.getAttribute("name") || undefined,
     testId: element.getAttribute("data-testid") || undefined,
     selector: selectorFor(element),
-    component: element.getAttribute("data-bugtrail-component") || undefined,
-    action: element.getAttribute("data-bugtrail-action") || undefined,
-    field: element.getAttribute("data-bugtrail-field") || element.getAttribute("name") || undefined,
+    component: annotation(element, "component"),
+    action: annotation(element, "action"),
+    field: annotation(element, "field") || element.getAttribute("name") || undefined,
     value: valueFor(element),
   };
 }
@@ -385,22 +393,22 @@ function pathFromUrl(url: string): string {
 }
 
 function toggleInspectionStyle(enabled: boolean): void {
-  const styleId = "bugtrail-inspection-style";
+  const styleId = "bughunter-inspection-style";
   let style = document.getElementById(styleId);
   if (enabled && !style) {
     style = document.createElement("style");
     style.id = styleId;
     style.textContent = `
-      html.bugtrail-inspecting, html.bugtrail-inspecting * {
+      html.bughunter-inspecting, html.bughunter-inspecting * {
         cursor: crosshair !important;
       }
 
-      html.bugtrail-inspecting *:hover {
+      html.bughunter-inspecting *:hover {
         outline: 2px solid #1f6f7a !important;
         outline-offset: 2px !important;
       }
     `;
     document.documentElement.append(style);
   }
-  document.documentElement.classList.toggle("bugtrail-inspecting", enabled);
+  document.documentElement.classList.toggle("bughunter-inspecting", enabled);
 }

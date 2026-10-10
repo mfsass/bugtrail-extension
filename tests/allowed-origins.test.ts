@@ -3,12 +3,12 @@ import {
   ALLOWED_HOST_MATCHES,
   OPTIONAL_HOST_MATCHES,
   displayHostFromMatch,
-  inferBugTrailContext,
-  isBuiltInBugTrailUrl,
+  inferBugHunterContext,
+  isBuiltInBugHunterUrl,
   matchForOrigin,
 } from "../utils/allowed-origins";
 
-describe("allowed BugTrail origins", () => {
+describe("allowed BugHunter origins", () => {
   it("includes Spur rewards admin environments and localhost", () => {
     expect(ALLOWED_HOST_MATCHES).toEqual([
       "https://rewards-admin.spurcorpgifting.com/*",
@@ -20,17 +20,17 @@ describe("allowed BugTrail origins", () => {
   });
 
   it("allows the configured app origins", () => {
-    expect(isBuiltInBugTrailUrl("https://rewards-admin.spurcorpgifting.com/customers")).toBe(true);
-    expect(isBuiltInBugTrailUrl("https://rewards-admin-stage.spurcorpgifting.com/")).toBe(true);
-    expect(isBuiltInBugTrailUrl("https://rewards-admin-dev.spurcorpgifting.com/orders/123")).toBe(true);
-    expect(isBuiltInBugTrailUrl("http://localhost:3000/debug")).toBe(true);
-    expect(isBuiltInBugTrailUrl("http://127.0.0.1:5173/")).toBe(true);
+    expect(isBuiltInBugHunterUrl("https://rewards-admin.spurcorpgifting.com/customers")).toBe(true);
+    expect(isBuiltInBugHunterUrl("https://rewards-admin-stage.spurcorpgifting.com/")).toBe(true);
+    expect(isBuiltInBugHunterUrl("https://rewards-admin-dev.spurcorpgifting.com/orders/123")).toBe(true);
+    expect(isBuiltInBugHunterUrl("http://localhost:3000/debug")).toBe(true);
+    expect(isBuiltInBugHunterUrl("http://127.0.0.1:5173/")).toBe(true);
   });
 
   it("rejects unrelated sites and unsupported schemes", () => {
-    expect(isBuiltInBugTrailUrl("https://example.com/")).toBe(false);
-    expect(isBuiltInBugTrailUrl("https://teams.microsoft.com/")).toBe(false);
-    expect(isBuiltInBugTrailUrl("chrome://extensions")).toBe(false);
+    expect(isBuiltInBugHunterUrl("https://example.com/")).toBe(false);
+    expect(isBuiltInBugHunterUrl("https://teams.microsoft.com/")).toBe(false);
+    expect(isBuiltInBugHunterUrl("chrome://extensions")).toBe(false);
   });
 
   it("derives a Chrome match pattern for an origin", () => {
@@ -50,19 +50,19 @@ describe("allowed BugTrail origins", () => {
   });
 
   it("infers app and environment context from known and user-added URLs", () => {
-    expect(inferBugTrailContext("https://rewards-admin.spurcorpgifting.com/customers")).toEqual({
+    expect(inferBugHunterContext("https://rewards-admin.spurcorpgifting.com/customers")).toEqual({
       app: "Rewards Admin",
       environment: "Production",
     });
-    expect(inferBugTrailContext("https://rewards-admin-stage.spurcorpgifting.com/customers")).toEqual({
+    expect(inferBugHunterContext("https://rewards-admin-stage.spurcorpgifting.com/customers")).toEqual({
       app: "Rewards Admin",
       environment: "Stage",
     });
-    expect(inferBugTrailContext("http://localhost:5173/orders")).toEqual({
+    expect(inferBugHunterContext("http://localhost:5173/orders")).toEqual({
       app: "Local App",
       environment: "Local",
     });
-    expect(inferBugTrailContext("https://customer-portal-uat.example.com/orders")).toEqual({
+    expect(inferBugHunterContext("https://customer-portal-uat.example.com/orders")).toEqual({
       app: "Customer Portal Uat",
       environment: "UAT",
     });

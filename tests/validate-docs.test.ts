@@ -8,7 +8,7 @@ const root = process.cwd();
 const tempRoots: string[] = [];
 
 function makeTempWorkspace() {
-  const tempRoot = join(tmpdir(), `bugtrail-docs-${Date.now()}-${Math.random().toString(16).slice(2)}`);
+  const tempRoot = join(tmpdir(), `bughunter-docs-${Date.now()}-${Math.random().toString(16).slice(2)}`);
   tempRoots.push(tempRoot);
   mkdirSync(tempRoot, { recursive: true });
 
@@ -47,7 +47,7 @@ describe("docs validation", () => {
 
   test("fails when release notes drift from the package version", () => {
     const workspace = makeTempWorkspace();
-    writeFileSync(join(workspace, "package.json"), JSON.stringify({ name: "bugtrail-extension", version: "9.9.9" }));
+    writeFileSync(join(workspace, "package.json"), JSON.stringify({ name: "bughunter-extension", version: "9.9.9" }));
 
     expect(() => runValidator(workspace)).toThrow(/missing docs\/release-notes-9\.9\.9\.md/);
   });

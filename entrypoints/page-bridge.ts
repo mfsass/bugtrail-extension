@@ -1,9 +1,9 @@
 export default defineUnlistedScript(() => {
   const channel = new URL((document.currentScript as HTMLScriptElement | null)?.src || location.href).searchParams.get("channel");
-  (window as Window & { __bugtrailBridgeReady?: boolean }).__bugtrailBridgeReady = true;
+  (window as Window & { __bughunterBridgeReady?: boolean }).__bughunterBridgeReady = true;
   const post = (detail: unknown) => {
-    window.postMessage({ source: "bugtrail-page", channel, detail }, "*");
-    document.dispatchEvent(new CustomEvent("bugtrail-page-event", { detail: { channel, detail } }));
+    window.postMessage({ source: "bughunter-page", channel, detail }, "*");
+    document.dispatchEvent(new CustomEvent("bughunter-page-event", { detail: { channel, detail } }));
   };
 
   const originalConsoleError = console.error.bind(console);
@@ -79,12 +79,12 @@ export default defineUnlistedScript(() => {
   const originalOpen = XMLHttpRequest.prototype.open;
   const originalSend = XMLHttpRequest.prototype.send;
   XMLHttpRequest.prototype.open = function (method: string, url: string | URL, async?: boolean, username?: string | null, password?: string | null) {
-    Reflect.set(this, "__bugtrail", { method, url: String(url), startedAt: 0 });
+    Reflect.set(this, "__bughunter", { method, url: String(url), startedAt: 0 });
     return originalOpen.call(this, method, url, async ?? true, username ?? undefined, password ?? undefined);
   };
 
   XMLHttpRequest.prototype.send = function (body?: Document | XMLHttpRequestBodyInit | null) {
-    const meta = Reflect.get(this, "__bugtrail") as { method: string; url: string; startedAt: number } | undefined;
+    const meta = Reflect.get(this, "__bughunter") as { method: string; url: string; startedAt: number } | undefined;
     if (meta) meta.startedAt = performance.now();
 
     this.addEventListener("loadend", () => {

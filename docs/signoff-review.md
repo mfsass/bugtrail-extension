@@ -1,4 +1,4 @@
-# BugTrail Signoff Review
+# BugHunter Signoff Review
 
 ## Implemented Product Requirements
 
@@ -36,7 +36,7 @@
 Use Chrome or Brave with `.output/chrome-mv3` loaded unpacked.
 Record pass/fail evidence in `docs/live-pilot-checklist.md`.
 Use `docs/permissions-and-privacy.md` for internal IT or Chrome Web Store permission review.
-Use `docs/release-notes-0.1.0.md` for pilot distribution context and rollback notes.
+Use `docs/release-notes-1.0.0.md` for pilot distribution context and rollback notes.
 
 1. Start a trail on `https://rewards-admin-stage.spurcorpgifting.com/`.
 2. Add a non-built-in internal app with `Add this site` and confirm the prompt appears once.
@@ -48,6 +48,15 @@ Use `docs/release-notes-0.1.0.md` for pilot distribution context and rollback no
 8. Remove the user-added site and confirm recording is blocked there afterward.
 9. Confirm denied site access and copy/start failures surface as visible side-panel errors.
 
+## 1.0.0 Signoff (10 October 2026)
+
+**Automated gate: signed off.** `npm run verify:release` passed on 1.0.0 after the BugTrail to BugHunter rename: 32 unit tests, typecheck, production build, package validation, docs validation, 0 production audit vulnerabilities, zip, release metadata, and the real-browser runtime smoke test.
+
+- Package: `bughunter-extension-1.0.0-chrome.zip`, 15 files, 287 kB unpacked, no source maps.
+- Store listing assets (3 screenshots, 2 promo tiles) were generated from the real extension UI and checked by eye.
+
+**Manual runtime signoff: not done.** The authenticated Spur admin steps above and `docs/live-pilot-checklist.md` still need a human with access. Everything still outstanding for go-live is tracked in `docs/store/remaining-actions.md`.
+
 ## Release Recommendation
 
-BugTrail is ready for a controlled QA pilot after the manual runtime signoff above passes and `docs/live-pilot-checklist.md` is filled in. For broader team distribution, move from unpacked install to private Chrome Web Store or Chrome Enterprise policy.
+BugHunter 1.0.0 is code-complete and ready to submit once the manual runtime signoff passes and the account, hosting, and branding items in `docs/store/remaining-actions.md` are closed. Prefer a private or unlisted Chrome Web Store listing, or Chrome Enterprise policy, over an unpacked install.

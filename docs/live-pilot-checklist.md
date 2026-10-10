@@ -1,11 +1,11 @@
-# BugTrail Live Pilot Checklist
+# BugHunter Live Pilot Checklist
 
 Use this checklist for the authenticated Spur admin pilot before production signoff.
 
 ## Build Under Test
 
-- Version: `0.1.0`
-- Package: `.output/bugtrail-extension-0.1.0-chrome.zip`
+- Version: `1.0.0`
+- Package: `.output/bughunter-extension-1.0.0-chrome.zip`
 - Browser:
 - Tester:
 - Date:
@@ -15,7 +15,7 @@ Use this checklist for the authenticated Spur admin pilot before production sign
 
 - [ ] `npm run verify:release` passed before the package was shared.
 - [ ] Extension installed from the current package.
-- [ ] BugTrail icon opens the side panel.
+- [ ] BugHunter icon opens the side panel.
 - [ ] Built-in Spur admin site starts without `Add this site`.
 - [ ] App and environment are inferred correctly.
 - [ ] App and environment fields can be overridden before start.

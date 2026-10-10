@@ -31,6 +31,9 @@ const requiredDocs = [
   "docs/qa-install-guide.md",
   "docs/live-pilot-checklist.md",
   "docs/permissions-and-privacy.md",
+  "docs/store/listing.md",
+  "docs/store/privacy-policy.md",
+  "docs/store/launch-checklist.md",
   `docs/${releaseNotesFile}`,
 ];
 
@@ -43,6 +46,11 @@ const markdownFiles = [
   ...readdirSync(join(root, "docs"))
     .filter((file) => file.endsWith(".md"))
     .map((file) => join(root, "docs", file)),
+  ...(existsSync(join(root, "docs", "store"))
+    ? readdirSync(join(root, "docs", "store"))
+        .filter((file) => file.endsWith(".md"))
+        .map((file) => join(root, "docs", "store", file))
+    : []),
 ];
 
 for (const path of markdownFiles) {
@@ -76,6 +84,16 @@ if (!allDocsText.includes("release-manifest.json")) fail("documentation must ref
 if (!allDocsText.includes("npm run verify:release")) fail("documentation must reference npm run verify:release");
 if (!allDocsText.includes("docs/live-pilot-checklist.md")) fail("documentation must reference docs/live-pilot-checklist.md");
 if (!allDocsText.includes("docs/permissions-and-privacy.md")) fail("documentation must reference docs/permissions-and-privacy.md");
+
+const wxtConfigPath = join(root, "wxt.config.ts");
+if (existsSync(wxtConfigPath)) {
+  const manifestDescription = readText(wxtConfigPath).match(/description:\s*"([^"]+)"/)?.[1];
+  if (!manifestDescription) fail("could not read the manifest description from wxt.config.ts");
+  const listing = readText(join(root, "docs/store/listing.md"));
+  if (!listing.includes(manifestDescription)) {
+    fail(`docs/store/listing.md summary must match the manifest description: "${manifestDescription}"`);
+  }
+}
 
 const releaseNotesPathFromRoot = relative(root, releaseNotes.path).replaceAll("\\", "/");
 if (releaseNotesPathFromRoot !== `docs/${releaseNotesFile}`) fail(`missing docs/${releaseNotesFile}`);

@@ -1,6 +1,6 @@
 {
-  "name": "bugtrail-extension",
-  "version": "0.1.0",
+  "name": "bughunter-extension",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -21,6 +21,7 @@
     "release:metadata": "node scripts/write-release-metadata.mjs",
     "validate:release-metadata": "node scripts/validate-release-metadata.mjs",
     "smoke:runtime": "node scripts/runtime-smoke.mjs",
+    "capture:store": "npm run build && node scripts/capture-store-assets.mjs",
     "verify": "npm test && npm run compile && npm run build && npm run validate:package && npm run validate:docs && npm run audit:prod",
     "verify:release": "npm run verify && npm run zip && npm run release:metadata && npm run validate:release-metadata && npm run smoke:runtime"
   },
